@@ -25,14 +25,14 @@ def read_wavs(fname_list):
     shape_x=n_sec_wav*rate_wav
     y = np.mat(np.zeros(shape=(1)))
     for i,fname in enumerate(fname_list):
-        label = fname.split('/')[-1].split('_')[0]
+        label = fname.split('/')[-1].split('_')[0].split('\\')[-1]
         y = np.vstack((y, label))
         # y.append(label)
         # here  fname is of full directory
         rate, data = read(fname)
         '''
         注意，这里进行了一些处理，由于音频文件的时间长度不一，采样率都是8000，则数据大小不一
-        先按照每个音频文件3秒（最大的2.3秒，足够），即3*8000的长度来考虑，不足的用0来补充
+        先按照每个音频文件3秒（最大的2.3秒，足够），即3*8000的长度来考虑，不足的用1来补充
         '''
         shape1 = data.shape
         if(shape1[0]<shape_x):
@@ -75,11 +75,24 @@ def load_data(one_hot):
         y2=OneHot.sklearn_one_hot(y2)['onehot_encoded']
     return x2,y2
 
+def shuffle_data():
+    filepath = 'D:\\学习笔记\\ai\\dataSets\\number-wav-data\\'
+    x2 = np.load(filepath + 'x.npy')
+    y2 = np.load(filepath + 'y.npy')
+    x2=np.hstack((x2,y2))
+    np.random.shuffle(x2)
+    x_shuffled=x2[:,0:24000]
+    y_shuffled=x2[:,-1]
+    np.save('x_shuffled',x_shuffled)
+    np.save('y_shuffled',y_shuffled)
+    print('shuffle_data done')
 
 if __name__ == '__main__':
     '''
+
     filepath='D:\\学习笔记\\ai\\dataSets\\number-wav-recordings\\'
     fname_list = get_file_names(filepath)
+    np.random.shuffle(fname_list)
     # tmp_list = fname_list  # [:2]
     # read_wav(tmp_list)
     x,y=read_wavs(fname_list=fname_list)
@@ -87,10 +100,10 @@ if __name__ == '__main__':
     np.save('y',y[1:,:])
     print('done')
     '''
+
     filepath='D:\\学习笔记\\ai\\dataSets\\number-wav-data\\'
     x2=np.load(filepath+'x.npy')
     y2=np.load(filepath+'y.npy')
-    print(y2.shape)
+    print(y2)
     # OneHot.sklearn_one_hot(y2[1:,:])
-
 

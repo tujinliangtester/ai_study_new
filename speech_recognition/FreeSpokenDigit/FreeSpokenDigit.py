@@ -10,7 +10,7 @@ n_sec_wav = 3
 rate_wav = 8000
 
 # 这是指rnn内核中的单元数量，同时，这也是rnn单元输出的结果维度数量
-lstm_num_units_encoder = 10
+lstm_num_units_encoder = 100
 lstm_num_units_decoder = 10
 # 分类的种类数量
 n_classes = 10
@@ -27,6 +27,7 @@ learning_rate = 0.001
 
 # 训练循环次数
 n_epoches = 10000
+batch_size=100
 
 x = tf.placeholder(shape=(None, diminput), dtype=tf.float32)
 y = tf.placeholder(shape=(None, n_classes), dtype=tf.float32)
@@ -90,14 +91,16 @@ ini = tf.global_variables_initializer()
 
 with tf.Session() as sess:
     fw = tf.summary.FileWriter(logdir='logs/', graph=sess.graph)
+    saver=tf.train.Saver()
     ini.run()
     # todo
     n=0
     for i in range(n_epoches):
-        if(n+100>1900):
+        if(n+batch_size>1900):
             n=0
-        opt.run(feed_dict={x: x_[n:n+100], y: y_[n:n+100]})
+        opt.run(feed_dict={x: x_[n:n+batch_size], y: y_[n:n+batch_size]})
         if (i % 100 == 0):
-            print('i',i,'acc',acc.eval(feed_dict={x: x_[n:n+100], y: y_[n:n+100]}))
-        n=n+100
-
+            print('i',i,'train acc',acc.eval(feed_dict={x: x_[n:n+batch_size], y: y_[n:n+batch_size]}))
+            saver.save(sess,save_path='save_sess/')
+        n=n+batch_size
+    print('total acc', acc.eval(feed_dict={x: x_, y: y_}))
