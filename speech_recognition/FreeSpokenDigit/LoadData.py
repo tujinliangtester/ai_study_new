@@ -36,7 +36,7 @@ def read_wavs(fname_list):
         '''
         shape1 = data.shape
         if(shape1[0]<shape_x):
-            data_0=np.zeros(shape=(shape_x-shape1[0]))
+            data_0=np.ones(shape=(shape_x-shape1[0]))
             # data.extend(data_0)
             data=np.append(data,data_0)
         data = np.mat(data)
@@ -68,8 +68,9 @@ def read_wav(fname_list):
     '''
 def load_data(one_hot):
     # 已经调用方法将音频文件转换成矩阵文件
-    x2 = np.load('x.npy')
-    y2 = np.load('y.npy')
+    filepath = 'D:\\学习笔记\\ai\\dataSets\\number-wav-data\\'
+    x2 = np.load(filepath + 'x.npy')
+    y2 = np.load(filepath + 'y.npy')
     if(one_hot==True):
         y2=OneHot.sklearn_one_hot(y2)['onehot_encoded']
     return x2,y2
@@ -77,9 +78,7 @@ def load_data(one_hot):
 
 if __name__ == '__main__':
     '''
-
-    filepath = (sys.path)[0] + '/recordings/'
-
+    filepath='D:\\学习笔记\\ai\\dataSets\\number-wav-recordings\\'
     fname_list = get_file_names(filepath)
     # tmp_list = fname_list  # [:2]
     # read_wav(tmp_list)
@@ -88,8 +87,10 @@ if __name__ == '__main__':
     np.save('y',y[1:,:])
     print('done')
     '''
-    x2=np.load('x.npy')
-    y2=np.load('y.npy')
+    filepath='D:\\学习笔记\\ai\\dataSets\\number-wav-data\\'
+    x2=np.load(filepath+'x.npy')
+    y2=np.load(filepath+'y.npy')
     print(y2.shape)
     # OneHot.sklearn_one_hot(y2[1:,:])
+
 

@@ -26,7 +26,7 @@ num_rnn_layers = int(n_sec_wav * 1000 / 20)
 learning_rate = 0.001
 
 # 训练循环次数
-n_epoches = 100
+n_epoches = 10000
 
 x = tf.placeholder(shape=(None, diminput), dtype=tf.float32)
 y = tf.placeholder(shape=(None, n_classes), dtype=tf.float32)
@@ -46,7 +46,7 @@ B = {'b_decoder': tf.Variable(tf.zeros(shape=(lstm_num_units_decoder))),
 
 
 def RNN(x, num_rnn_layers=num_rnn_layers):
-    x = tf.split(x, num_rnn_layers)
+    x = tf.split(x, num_rnn_layers,axis=1)
     lstm_cell = tf.nn.rnn_cell.BasicLSTMCell(num_units=lstm_num_units_encoder)
     '''
     # 注意，这里rnn.static_rnn这个方法，inputs=x，是将x的每一行带入到lstm_cell中进行计算，
@@ -54,23 +54,23 @@ def RNN(x, num_rnn_layers=num_rnn_layers):
     # 所以，其实就相当于是说，行数代表了rnn的层数；
     # outputs是每一层的output组合成的列表；
     # state只会保存最后一个state
-    
     '''
-    LSTM_O, LSTM_S = rnn.static_rnn(lstm_cell, x)
+    LSTM_O, LSTM_S = rnn.static_rnn(lstm_cell, x,dtype=tf.float32)
     return {'LSTM_O': LSTM_O, 'LSTM_S': LSTM_S}
 
 
 def batch_inputs_rnn(inputs):
     batch_lstm_o=np.mat(np.zeros(shape=(1,lstm_num_units_encoder)))
     # map_fn代替for循环
-    myrnn=tf.map_fn(fn=lambda input:RNN(input,num_rnn_layers=num_rnn_layers),elems=inputs)
-    batch_lstm_o=myrnn
-    for input in inputs:
-        myrnn = RNN(input, num_rnn_layers=num_rnn_layers)
-        #取最后一行，即最后一个output，并加到batch_lstm_o中
-        last_LSTM_O=myrnn['LSTM_O'][-1]
-        batch_lstm_o = np.vstack((batch_lstm_o, last_LSTM_O))
-    return batch_lstm_o[1:]
+    # myrnn=tf.map_fn(fn=lambda input:RNN(input,num_rnn_layers=num_rnn_layers),elems=inputs)
+    myrnn=RNN(inputs,num_rnn_layers=num_rnn_layers)
+    batch_lstm_o=myrnn['LSTM_O']
+    # for input in inputs:
+    #     myrnn = RNN(input, num_rnn_layers=num_rnn_layers)
+    #     #取最后一行，即最后一个output，并加到batch_lstm_o中
+    #     last_LSTM_O=myrnn['LSTM_O'][-1]
+    #     batch_lstm_o = np.vstack((batch_lstm_o, last_LSTM_O))
+    return batch_lstm_o[-1]
 
 batch_lstm_o=batch_inputs_rnn(x)
 
@@ -83,8 +83,9 @@ loss = tf.nn.softmax_cross_entropy_with_logits(labels=y, logits=sotfmax_out)
 optm = tf.train.AdamOptimizer(learning_rate=learning_rate)
 opt = optm.minimize(loss=loss)
 
-acc = accuracy_score(y_true=y, y_pred=sotfmax_out)
-
+# acc = accuracy_score(y_true=y, y_pred=sotfmax_out)#事实证明，用sklearn的acc不行
+correct_prediction = tf.equal(tf.cast(tf.argmax(sotfmax_out, 1), tf.float32), tf.cast(tf.argmax(y, 1),tf.float32))
+acc = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 ini = tf.global_variables_initializer()
 
 with tf.Session() as sess:
@@ -97,6 +98,6 @@ with tf.Session() as sess:
             n=0
         opt.run(feed_dict={x: x_[n:n+100], y: y_[n:n+100]})
         if (i % 100 == 0):
-            sess.run(fetches=[acc], feed_dict={x: x_[n:n+100], y: y_[n:n+100]})
+            print('i',i,'acc',acc.eval(feed_dict={x: x_[n:n+100], y: y_[n:n+100]}))
         n=n+100
 
