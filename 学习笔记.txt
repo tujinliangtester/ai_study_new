@@ -18,7 +18,8 @@ tf：
         5.计算是否正确
         6.评估是否正确
 6.保存模型
-    创建saver节点，其实就是保留的Variable和迭代情况，可以直接保存session
+    创建saver节点，    saver=tf.train.Saver()
+    其实就是保留的Variable和迭代情况，可以直接保存session
     调用模型时直接用saver的restore方法，将模型赋值给当前session，
     注意，这里还是需要构建图，其他操作与训练时一致，只是无需再训练了
 7.代码模块化
