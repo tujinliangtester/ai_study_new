@@ -86,7 +86,9 @@ tf：
 	教材中是用了特征来对单词进行编码，从而可以计算单词间的相关性
 
 RNN
-    下面是构建rnn时，官方的方法legacy_seq2seq.rnn_decoder
+    下面是构建rnn时，官方的方法
+    from tensorflow.contrib import legacy_seq2seq
+    legacy_seq2seq.rnn_decoder：
   with variable_scope.variable_scope(scope or "rnn_decoder"):
     state = initial_state
     outputs = []
@@ -102,7 +104,17 @@ RNN
       if loop_function is not None:
         prev = output
   return outputs, state
+
+    其中：loop_function是个循环函数
+            def loop(prev, _):
+            prev = tf.matmul(prev, softmax_w) + softmax_b
+            prev_symbol = tf.stop_gradient(tf.argmax(prev, 1))
+            return tf.nn.embedding_lookup(embedding, prev_symbol)
     从上面可以看出，其实还是循环的思想，但是这里只有decoder，没有找到encoder，其实可以仿照的来生成？
+    用笔和纸对上面的代码进行了分析
+        1.分析出很多问题，需要后续进行解决
+        2.需要想办法将图形的笔记整理处理，可能需要一个很好的笔记工具，但是不能跟项目代码放在一起
+
 
 TensorFlow：
 	https://www.tensorflow.org/tutorials/audio_recognition
