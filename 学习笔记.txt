@@ -72,8 +72,6 @@ tf：
 
 
 
-NLP学习：
-
 
 处理语言识别，需要先学习RNN
 1.RNN的思想是非常重要的，就是前面的结果需要影响后面的结果，给一个模型，将前一个输出作为下一个的输入中的一部分。
@@ -82,18 +80,36 @@ NLP学习：
 3.BRNN（bidirectional RNN）
 	可以通过后续的结果来反过来判断前一个结果到底是什么
 4.Deep RNN
-	每个单独的序列层上，考虑deep 层，既考虑了序列时间，又考虑了深度（当然，由于模型可能越来越大，后面的层可以考虑只看深度层或只看时间序列层）
+	每个单独的序列层上，考虑deep 层，既考虑了序列时间，又考虑了深度
+	（当然，由于模型可能越来越大，后面的层可以考虑只看深度层或只看时间序列层）
 5.在介绍word representation时，提到了两个单词之间的相关性，用one hot编码的话，任意两个单词都是不相关的，知识图谱会有用吗？
 	教材中是用了特征来对单词进行编码，从而可以计算单词间的相关性
 
-
+RNN
+    下面是构建rnn时，官方的方法legacy_seq2seq.rnn_decoder
+  with variable_scope.variable_scope(scope or "rnn_decoder"):
+    state = initial_state
+    outputs = []
+    prev = None
+    for i, inp in enumerate(decoder_inputs):
+      if loop_function is not None and prev is not None:
+        with variable_scope.variable_scope("loop_function", reuse=True):
+          inp = loop_function(prev, i)
+      if i > 0:
+        variable_scope.get_variable_scope().reuse_variables()
+      output, state = cell(inp, state)
+      outputs.append(output)
+      if loop_function is not None:
+        prev = output
+  return outputs, state
+    从上面可以看出，其实还是循环的思想，但是这里只有decoder，没有找到encoder，其实可以仿照的来生成？
 
 TensorFlow：
 	https://www.tensorflow.org/tutorials/audio_recognition
 	
 在TensorFlow的练习中，optimizer文件，对房价进行线性回归时，mse不降反升
-而用adam方法进行计算时，模型正常，有可能是因为记录数量太大了，导致在计算的过程中数据溢出
-用SGD或mini batch GD可能会正常，实验证明，不行
+    而用adam方法进行计算时，模型正常，有可能是因为记录数量太大了，导致在计算的过程中数据溢出
+    用SGD或mini batch GD可能会正常，（实验证明，不行）
 
 
 RNN

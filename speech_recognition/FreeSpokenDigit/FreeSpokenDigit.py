@@ -42,10 +42,8 @@ B = {'b_decoder': tf.Variable(tf.zeros(shape=(lstm_num_units_decoder))),
 
 # 核心代码
 '''
-注意，传入这个函数的x，只能是一个音频文件
+注意，传入这个函数的x，只能是一个批量的音频文件
 '''
-
-
 def RNN(x, num_rnn_layers=num_rnn_layers):
     x = tf.split(x, num_rnn_layers,axis=1)
     lstm_cell = tf.nn.rnn_cell.BasicLSTMCell(num_units=lstm_num_units_encoder)
