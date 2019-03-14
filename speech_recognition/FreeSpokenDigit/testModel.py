@@ -115,6 +115,7 @@ with tf.Session() as sess:
             saver.save(sess,save_path='save_sess/')
         n=n+batch_size
     print('total acc', acc.eval(feed_dict={x: x_, y: y_}))
+    1_tujinliang_0
     '''
     saver.restore(sess,save_path='save_sess/')
     print('total acc', acc.eval(feed_dict={x: x_, y: y_}))

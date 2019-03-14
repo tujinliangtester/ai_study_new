@@ -97,7 +97,7 @@ if __name__ == '__main__':
     # tmp_list = fname_list  # [:2]
     # read_wav(tmp_list)
 
-
+    '''
     # for test
     fname_list=[]
     s1='D:\\学习笔记\\ai\\dataSets\\number-wav-recordings\\'
@@ -106,6 +106,7 @@ if __name__ == '__main__':
         s=s1+str(i)+s2
         fname_list.append(s)
     # fname_list=['D:\\学习笔记\\ai\\dataSets\\number-wav-recordings\\0_jackson_0.wav']
+    fname_list.append('D:\\学习笔记\\ai\\dataSets\\number-wav-recordings\\1_tujinliang_0.wav')
     print(fname_list)
 
     x,y=read_wavs(fname_list=fname_list)
@@ -114,7 +115,13 @@ if __name__ == '__main__':
     print('done')
     '''
 
+    '''
+
     x,y=load_data(one_hot=True,filepath='D:\\学习笔记\\ai\\dataSets\\number-wav-data\\test\\')
     print('x',x)
     print('y',y)
-'''
+        '''
+
+    fname_list=['D:\\学习笔记\\ai\\dataSets\\number-wav-recordings\\1_tujinliang_0.wav']
+    fname_list.append('D:\\学习笔记\\ai\\dataSets\\number-wav-recordings\\0_jackson_0.wav')
+    read_wav(fname_list)
