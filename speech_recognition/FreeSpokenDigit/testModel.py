@@ -32,7 +32,7 @@ batch_size=100
 x = tf.placeholder(shape=(None, diminput), dtype=tf.float32)
 y = tf.placeholder(shape=(None, n_classes), dtype=tf.float32)
 
-x_, y_ = LoadData.load_data(one_hot=True)
+x_, y_ = LoadData.load_data(one_hot=True,filepath='D:\\学习笔记\\ai\\dataSets\\number-wav-data\\test\\')
 
 W = {'w_decoder': tf.Variable(
     tf.random_normal(shape=(lstm_num_units_encoder*num_rnn_layers, lstm_num_units_decoder), dtype=tf.float32)),
@@ -95,15 +95,16 @@ optm = tf.train.AdamOptimizer(learning_rate=learning_rate)
 opt = optm.minimize(loss=loss)
 
 # acc = accuracy_score(y_true=y, y_pred=sotfmax_out)#事实证明，用sklearn的acc不行
+pre=tf.argmax(sotfmax_out, 1)
 correct_prediction = tf.equal(tf.cast(tf.argmax(sotfmax_out, 1), tf.float32), tf.cast(tf.argmax(y, 1),tf.float32))
 acc = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 ini = tf.global_variables_initializer()
 
 with tf.Session() as sess:
-    fw = tf.summary.FileWriter(logdir='logs/', graph=sess.graph)
+    # fw = tf.summary.FileWriter(logdir='logs/', graph=sess.graph)
     saver=tf.train.Saver()
     ini.run()
-    # todo
+    '''
     n=0
     for i in range(n_epoches):
         if(n+batch_size>1900):
@@ -114,3 +115,7 @@ with tf.Session() as sess:
             saver.save(sess,save_path='save_sess/')
         n=n+batch_size
     print('total acc', acc.eval(feed_dict={x: x_, y: y_}))
+    '''
+    saver.restore(sess,save_path='save_sess/')
+    print('total acc', acc.eval(feed_dict={x: x_, y: y_}))
+    print('pre',pre.eval(feed_dict={x: x_, y: y_}))

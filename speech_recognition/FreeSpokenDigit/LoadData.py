@@ -66,9 +66,9 @@ def read_wav(fname_list):
     max(data_shape_list) (18262,)
     min(data_shape_list) (1148,)
     '''
-def load_data(one_hot):
+def load_data(one_hot,filepath='D:\\学习笔记\\ai\\dataSets\\number-wav-data\\'):
     # 已经调用方法将音频文件转换成矩阵文件
-    filepath = 'D:\\学习笔记\\ai\\dataSets\\number-wav-data\\'
+    filepath = filepath
     x2 = np.load(filepath + 'x.npy')
     y2 = np.load(filepath + 'y.npy')
     if(one_hot==True):
@@ -88,22 +88,33 @@ def shuffle_data():
     print('shuffle_data done')
 
 if __name__ == '__main__':
-    '''
 
-    filepath='D:\\学习笔记\\ai\\dataSets\\number-wav-recordings\\'
-    fname_list = get_file_names(filepath)
-    np.random.shuffle(fname_list)
+    # filepath='D:\\学习笔记\\ai\\dataSets\\number-wav-recordings\\'
+    # fname_list = get_file_names(filepath)
+    # print('fname_list',fname_list)
+
+    # np.random.shuffle(fname_list)
     # tmp_list = fname_list  # [:2]
     # read_wav(tmp_list)
+
+
+    # for test
+    fname_list=[]
+    s1='D:\\学习笔记\\ai\\dataSets\\number-wav-recordings\\'
+    s2='_jackson_0.wav'
+    for i in range(10):
+        s=s1+str(i)+s2
+        fname_list.append(s)
+    # fname_list=['D:\\学习笔记\\ai\\dataSets\\number-wav-recordings\\0_jackson_0.wav']
+    print(fname_list)
+
     x,y=read_wavs(fname_list=fname_list)
     np.save('x',x[1:,:])
     np.save('y',y[1:,:])
     print('done')
     '''
 
-    filepath='D:\\学习笔记\\ai\\dataSets\\number-wav-data\\'
-    x2=np.load(filepath+'x.npy')
-    y2=np.load(filepath+'y.npy')
-    print(y2)
-    # OneHot.sklearn_one_hot(y2[1:,:])
-
+    x,y=load_data(one_hot=True,filepath='D:\\学习笔记\\ai\\dataSets\\number-wav-data\\test\\')
+    print('x',x)
+    print('y',y)
+'''
