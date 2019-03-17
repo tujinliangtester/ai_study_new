@@ -120,14 +120,19 @@ def shuffle_data():
     np.save('y_shuffled',y_shuffled)
     print('shuffle_data done')
 
-def test():
+def test(num=-1,user='jackson',index_i=0):
     fname_list = []
     s1 = 'D:\\学习笔记\\ai\\dataSets\\number-wav-recordings\\'
-    s2 = '_jackson_0.wav'
-    for i in range(10):
-        s = s1 + str(i) + s2
+    s2 = '_'+user+'_'+str(index_i)+'.wav'
+    if(num==-1):
+        for i in range(10):
+            s = s1 + str(i) + s2
+            fname_list.append(s)
+    else:
+        s=s1+str(num)+s2
         fname_list.append(s)
     return fname_list
+
 
 if __name__ == '__main__':
     fname_list=test()
@@ -137,8 +142,12 @@ if __name__ == '__main__':
     # np.random.shuffle(fname_list)
 
     # fname_list=['D:\\学习笔记\\ai\\dataSets\\number-wav-recordings\\0_jackson_0.wav']
-    fname_list.append('D:\\学习笔记\\ai\\dataSets\\number-wav-recordings\\1_tujinliang_0.wav')
+    # fname_list.append('D:\\学习笔记\\ai\\dataSets\\number-wav-recordings\\1_tujinliang_0.wav')
+    for i in range(5):
+        fname_list2=test(num=1,user='tujinliang',index_i=i)
+        fname_list.extend(fname_list2)
 
+    print('fname_list:',fname_list)
     x,y=samplerate_conv_read_wavs(fname_list=fname_list)
     # print(x[10])
     np.save('x',x[1:,:])
