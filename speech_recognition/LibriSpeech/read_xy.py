@@ -4,7 +4,7 @@ import sys, os
 from common import OneHot
 import numpy as np
 
-filepath = 'D:\\学习笔记\\ai\\dataSets\\dev-clean\\LibriSpeech\\dev-clean\\'
+filepath = 'D:\\学习笔记\\ai\\dataSets\\dev-clean\\LibriSpeech-84-2902\\dev-clean\\'
 n_sec_wav=30
 rate_wav=16000
 
@@ -97,8 +97,8 @@ def read_trans2y():
     onehot_encoded=np.hstack((onehot_encoded,col_zero))
 
     row_zero=np.zeros(shape=(1,onehot_encoded.shape[1]))
-    row_zero[1,-1]=1
-    print('row_zero:',row_zero)
+    row_zero[0,-1]=1
+    onehot_encoded = np.vstack((onehot_encoded, row_zero))
     return onehot_encoded
 
 # 根据x取不同的y，并且将不足60的部分补充成NPS对应的one hot 编码，应该是最后一个？
