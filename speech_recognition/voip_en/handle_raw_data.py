@@ -6,6 +6,8 @@ from common import OneHot
 n_sec_wav = 8
 rate_wav = 16000
 
+# 代表空单词
+SPACE_TJL='SPACE_TJL'
 
 def read_wavs(fname_list):
     x = np.mat(np.zeros(shape=(1, n_sec_wav * rate_wav)))
@@ -42,10 +44,7 @@ def read_wav():
     n_sec_wav   6s
     '''
 
-
 get_file_names_tmp_list = []
-
-
 def get_file_names(filepath):
     files = os.listdir(filepath)
     for fi in files:
@@ -68,6 +67,56 @@ def load_data(one_hot=True,filepath='D:\\学习笔记\\ai\\dataSets\\number-wav-
     if(one_hot==True):
         data=OneHot.sklearn_one_hot(data)['onehot_encoded']
     return data
+
+def map_y_onehot(y_list,y_fpath,y_onehot_fpath):
+    '''
+
+    :param y_list: 一条音频文件对应的单词列表
+    :param y_fpath: 已经读取后的包含所有单词的y文件
+    :param y_onehot_fpath: 已经读取后的包含所有单词的y的onehot编码文件
+    :return:返回这条音频文件单词对应的onehot编码列表
+    '''
+    y_data=list(np.load(y_fpath))
+    y_onehot_data=np.load(y_onehot_fpath)
+    tmp_list=[]
+    for y in y_list:
+        index=y_data.index(y)
+        tmp_list.append(y_onehot_data[index,:])
+    return tmp_list
+
+
+# 由于机器性能原因可能导致无法进行训练，有可能需要以时间换空间，不一次性的将x读进来
+def get_x(x_path):
+    '''
+    :param x_path: 已经读取好了的x数据文件存放路径
+    :return:
+    '''
+    return np.load(x_path)
+
+def get_y(indexs,datapath,n):
+    '''
+    :param indexs: x对应的索引列表，也是y对应的索引列表（x与y是相同的文件名）
+    :param datapath::TRN文件所在目录
+    :param n::一条音频文件对应的单词数量，不足的，用空补充
+    :return:这些索引对应x的单词，经过onehot编码后的矩阵
+    '''
+    fpath =datapath
+    whole_file_list = get_file_names(fpath)
+    trn_file_list = []
+    y_batch=[]
+    for file in whole_file_list:
+        if (file.find('TRN') >= 0):
+            trn_file_list.append(file)
+    for index in indexs:
+        trn_file=trn_file_list[index]
+        y_tmp=read_trn(trn_file)
+        for i in range(n-len(y_tmp)):
+            y_tmp.append(SPACE_TJL)
+        y_onehot_tmp=map_y_onehot(y_tmp,
+                                  y_fpath='D:\\学习笔记\\ai\\dataSets\\data_voip_en\\y1_with_SPACE_TJL.npy',
+                                  y_onehot_fpath='D:\\学习笔记\\ai\\dataSets\\data_voip_en\\y1_with_SPACE_TJL_onehot.npy')
+        y_batch.append(y_onehot_tmp)
+    return np.mat(y_batch)
 
 if __name__ == '__main__':
 
@@ -113,13 +162,14 @@ if __name__ == '__main__':
         print(y_word[0])
     '''
     y1=np.load('D:\\学习笔记\\ai\\dataSets\\data_voip_en\\y1.npy')
-    y2=np.load('D:\\学习笔记\\ai\\dataSets\\data_voip_en\\y2.npy')
+    # y2=np.load('D:\\学习笔记\\ai\\dataSets\\data_voip_en\\y2.npy')
     y1=list(y1)
-    y2=list(y2)
-    y=y1+y2
-    # np.save('y1-2',y)
+    # y2=list(y2)
+    y1.append(SPACE_TJL)
+    y=y1
+    np.save('y1_with_SPACE_TJL',y)
     y=OneHot.sklearn_one_hot(y)
     print('y_onehot', y)
     print(type(y))
     print(y['onehot_encoded'].shape)
-    # np.save('y1-2_onehot_encoded',y['onehot_encoded'])
+    np.save('y1-y1_with_SPACE_TJL_onehot',y['onehot_encoded'])
