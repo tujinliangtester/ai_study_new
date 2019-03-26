@@ -115,8 +115,9 @@ def get_y(indexs,datapath,n):
         y_onehot_tmp=map_y_onehot(y_tmp,
                                   y_fpath='D:\\学习笔记\\ai\\dataSets\\data_voip_en\\y1_with_SPACE_TJL.npy',
                                   y_onehot_fpath='D:\\学习笔记\\ai\\dataSets\\data_voip_en\\y1_with_SPACE_TJL_onehot.npy')
-        y_batch.append(y_onehot_tmp)
-    return np.mat(y_batch)
+        y_onehot_tmp_mat=np.mat(y_onehot_tmp)
+        y_batch.append(y_onehot_tmp_mat)
+    return y_batch
 
 if __name__ == '__main__':
 
@@ -161,6 +162,8 @@ if __name__ == '__main__':
         print(len(y_word))
         print(y_word[0])
     '''
+
+    '''
     y1=np.load('D:\\学习笔记\\ai\\dataSets\\data_voip_en\\y1.npy')
     # y2=np.load('D:\\学习笔记\\ai\\dataSets\\data_voip_en\\y2.npy')
     y1=list(y1)
@@ -173,3 +176,10 @@ if __name__ == '__main__':
     print(type(y))
     print(y['onehot_encoded'].shape)
     np.save('y1-y1_with_SPACE_TJL_onehot',y['onehot_encoded'])
+    '''
+
+    indexs=[1,2,3]
+    data_set_dir = 'D:\\学习笔记\\ai\\dataSets\\data_voip_en\\tmpData'
+    max_line_char_num=20
+    res=get_y(indexs=indexs, datapath=data_set_dir, n=max_line_char_num)
+

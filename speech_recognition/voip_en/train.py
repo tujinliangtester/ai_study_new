@@ -6,7 +6,7 @@ from speech_recognition.voip_en import  handle_raw_data
 
 # 为了能够使用for循环来迭代Tensor objects
 #这里有问题，用了这个就不能用placeholder和session了。。。有时间了还是需要好好研究一下
-tf.enable_eager_execution()
+# tf.enable_eager_execution()
 
 # 一条数据的秒数
 n_sec_wav = 8
