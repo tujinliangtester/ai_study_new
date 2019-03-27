@@ -2,7 +2,10 @@ import tensorflow as tf
 from tensorflow.contrib import rnn
 import numpy as np
 from tensorflow.contrib import legacy_seq2seq
-from speech_recognition.voip_en import  handle_raw_data
+from speech_recognition.voip_en import  handle_raw_data,seq2seq_modifyed
+from tensorflow.python.ops import variable_scope
+
+
 
 # 为了能够使用for循环来迭代Tensor objects
 #这里有问题，用了这个就不能用placeholder和session了。。。有时间了还是需要好好研究一下
@@ -71,9 +74,119 @@ batch_lstm_o = tf.concat(batch_lstm_os, axis=1)
 def loop_function(prev, _):
     return prev
 
+def rnn_decoder(decoder_inputs,
+                initial_state,
+                cell,
+                loop_function=None,
+                scope=None):
+  """RNN decoder for the sequence-to-sequence model.
+
+  Args:
+    decoder_inputs: A list of 2D Tensors [batch_size x input_size].
+    initial_state: 2D Tensor with shape [batch_size x cell.state_size].
+    cell: rnn_cell.RNNCell defining the cell function and size.
+    loop_function: If not None, this function will be applied to the i-th output
+      in order to generate the i+1-st input, and decoder_inputs will be ignored,
+      except for the first element ("GO" symbol). This can be used for decoding,
+      but also for training to emulate http://arxiv.org/abs/1506.03099.
+      Signature -- loop_function(prev, i) = next
+        * prev is a 2D Tensor of shape [batch_size x output_size],
+        * i is an integer, the step number (when advanced control is needed),
+        * next is a 2D Tensor of shape [batch_size x input_size].
+    scope: VariableScope for the created subgraph; defaults to "rnn_decoder".
+
+  Returns:
+    A tuple of the form (outputs, state), where:
+      outputs: A list of the same length as decoder_inputs of 2D Tensors with
+        shape [batch_size x output_size] containing generated outputs.
+      state: The state of each cell at the final time-step.
+        It is a 2D Tensor of shape [batch_size x cell.state_size].
+        (Note that in some cases, like basic RNN cell or GRU cell, outputs and
+         states can be the same. They are different for LSTM cells though.)
+  """
+  with variable_scope.variable_scope(scope or "rnn_decoder"):
+    state = initial_state
+    outputs = []
+    prev = None
+    i=0
+
+    # 这里并没有将state返回，当然目前的这个模型中暂时用不到这个
+    def map_fn_fn(inp,prev=prev,state=state,i=i):
+        if loop_function is not None and prev is not None:
+            with variable_scope.variable_scope("loop_function", reuse=True):
+                inp = loop_function(prev, i)
+        if i > 0:
+            variable_scope.get_variable_scope().reuse_variables()
+        output, state = cell(inp, state)
+        outputs.append(output)
+        if loop_function is not None:
+            prev = output
+        i+=1
+
+    tf.map_fn(fn=lambda inp:map_fn_fn(inp=inp,prev=prev,state=state,i=i)
+              ,elems=decoder_inputs)
+  return outputs, state
+
+def rnn_decoder_no_iteration(decoder_inputs,
+                initial_state,
+                cell,
+                loop_function=None,
+                scope=None):
+  """RNN decoder for the sequence-to-sequence model.
+
+  Args:
+    decoder_inputs: A list of 2D Tensors [batch_size x input_size].
+    initial_state: 2D Tensor with shape [batch_size x cell.state_size].
+    cell: rnn_cell.RNNCell defining the cell function and size.
+    loop_function: If not None, this function will be applied to the i-th output
+      in order to generate the i+1-st input, and decoder_inputs will be ignored,
+      except for the first element ("GO" symbol). This can be used for decoding,
+      but also for training to emulate http://arxiv.org/abs/1506.03099.
+      Signature -- loop_function(prev, i) = next
+        * prev is a 2D Tensor of shape [batch_size x output_size],
+        * i is an integer, the step number (when advanced control is needed),
+        * next is a 2D Tensor of shape [batch_size x input_size].
+    scope: VariableScope for the created subgraph; defaults to "rnn_decoder".
+
+  Returns:
+    A tuple of the form (outputs, state), where:
+      outputs: A list of the same length as decoder_inputs of 2D Tensors with
+        shape [batch_size x output_size] containing generated outputs.
+      state: The state of each cell at the final time-step.
+        It is a 2D Tensor of shape [batch_size x cell.state_size].
+        (Note that in some cases, like basic RNN cell or GRU cell, outputs and
+         states can be the same. They are different for LSTM cells though.)
+  """
+  with variable_scope.variable_scope(scope or "rnn_decoder"):
+    state = initial_state
+    outputs = []
+    prev = None
+    # 注意，这里有loop_fun ，不需要再为每一个decoder单元提供输入，则不需要再用迭代循环decoder_inputs了
+    # for i, inp in enumerate(decoder_inputs):
+    for i in range(max_line_char_num):
+        inp=decoder_inputs
+        if loop_function is not None and prev is not None:
+            with variable_scope.variable_scope("loop_function", reuse=True):
+                inp = loop_function(prev, i)
+        # if i > 0:
+        #     variable_scope.get_variable_scope().reuse_variables()
+        output, state = cell(inp, state)
+        outputs.append(output)
+        if loop_function is not None:
+            prev = output
+  return outputs, state
+
+# 注意，这里为了能保证在decoder计算时，不会出现维度不匹配的情况，需要先将encoder的输出结果进行一次处理
+# 处理方式暂用全连接，名称为 transit 层，但需要留意其中的维度设置
+w_transit=tf.Variable(tf.random_normal(
+    shape=(lstm_num_units_encoder*num_rnn_layers, lstm_num_units_decoder), dtype=tf.float32))
+b_transit=tf.Variable(tf.zeros(shape=(lstm_num_units_decoder)))
+transit_out=tf.matmul(batch_lstm_o,w_transit)+b_transit
+
 lstm_cell = tf.nn.rnn_cell.BasicLSTMCell(num_units=lstm_num_units_decoder)
-decoder_outs, decoder_state = legacy_seq2seq.rnn_decoder(
-    decoder_inputs=batch_lstm_o,
+
+decoder_outs, decoder_state = rnn_decoder_no_iteration(
+    decoder_inputs=transit_out,
     initial_state=encoder_rnn['LSTM_S'],
     cell=lstm_cell,
     loop_function=loop_function)
@@ -82,11 +195,16 @@ sotfmax_outs=[]
 weights=[]
 for decoder_out in decoder_outs:
     # 这里的softmax其实还是应该用不同的w和b，但可以先共用尝试着训练一下
-    sotfmax_out = tf.matmul(decoder_out, W['w_sotfmax']) + B['b_sotfmax']
+    sotfmax_out = tf.nn.softmax(tf.matmul(decoder_out, W['w_sotfmax']) + B['b_sotfmax'])
     sotfmax_outs.append(sotfmax_out)
     weights.append(1)
 # 此weights是代表，各个sotfmax_out之间的loss占总loss的权重，暂设为1
-loss =  legacy_seq2seq.sequence_loss_by_example(targets=y, logits=sotfmax_outs,weights=weights)
+# loss =  seq2seq_modifyed.sequence_loss(targets=y, logits=sotfmax_outs,weights=weights)
+
+loss=0
+for i,sotfmax_out in enumerate(sotfmax_outs):
+    loss_tmp=tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=y[:,i,:],logits=sotfmax_out))
+    loss*=loss_tmp
 
 optm = tf.train.AdamOptimizer(learning_rate=learning_rate)
 opt = optm.minimize(loss=loss)
