@@ -17,8 +17,8 @@ n_sec_wav = 8
 rate_wav = 16000
 
 # 这是指rnn内核中的单元数量，同时，这也是rnn单元输出的结果维度数量
-lstm_num_units_encoder = 10
-lstm_num_units_decoder = 10
+lstm_num_units_encoder = 100
+lstm_num_units_decoder = 100
 # 分类的种类数量，前1000个音频文件，总共有186个单词，加一个空单词
 n_classes = 187
 
@@ -38,7 +38,7 @@ learning_rate = 0.001
 n_epoches = 10000
 
 # 所以考虑到内存爆炸，暂定5个文件为一个批次
-batch_size = 5
+batch_size = 100
 
 data_set_dir='D:\\学习笔记\\ai\\dataSets\\data_voip_en\\tmpData'
 
@@ -203,15 +203,18 @@ for decoder_out in decoder_outs:
 
 loss=0
 for i,sotfmax_out in enumerate(sotfmax_outs):
-    loss_tmp=tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=y[:,i,:],logits=sotfmax_out))
-    loss*=loss_tmp
+    loss_tmp=tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y[:,i,:],logits=sotfmax_out))
+    # 注意，如果这里用loss相乘的话，得到的模型，计算出acc会非常低，原因是什么呢？
+    # 有可能是因为这里的每一个decoder rnn不是通用的Varilble，相乘肯定会出问题？
+    loss+=loss_tmp
 
 optm = tf.train.AdamOptimizer(learning_rate=learning_rate)
 opt = optm.minimize(loss=loss)
 
 correct_prediction=0
-for logit, target in zip(sotfmax_outs, y):
-    correct_prediction += tf.equal(tf.cast(tf.argmax(logit, 1), tf.float32), tf.cast(tf.argmax(target, 1), tf.float32))
+for i,logit in enumerate(sotfmax_outs):
+    target=y[:,i,:]
+    correct_prediction += tf.cast(tf.equal(tf.cast(tf.argmax(logit, 1), tf.float32), tf.cast(tf.argmax(target, 1), tf.float32)),tf.float32)
 
 correct_prediction=correct_prediction/max_line_char_num
 acc = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
@@ -226,10 +229,12 @@ with tf.Session() as sess:
         indexs=[]
         if (n_iter + batch_size > 1000):
             n_iter = 0
-        for i in range(n_iter, n_iter + batch_size):
-            indexs.append(i)
+        for j in range(n_iter, n_iter + batch_size):
+            indexs.append(j)
         y_=handle_raw_data.get_y(indexs=indexs,datapath=data_set_dir,n=max_line_char_num)
         opt.run(feed_dict={x: x_[n_iter:n_iter + batch_size], y: y_})
+        print('i', i, 'train acc', acc.eval(feed_dict={x: x_[n_iter:n_iter + batch_size], y: y_}))
+        saver.save(sess, save_path='save_sess/')
         if (i % 100 == 0):
             print('i', i, 'train acc', acc.eval(feed_dict={x: x_[n_iter:n_iter + batch_size], y: y_}))
             saver.save(sess, save_path='save_sess/')
