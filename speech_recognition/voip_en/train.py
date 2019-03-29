@@ -17,8 +17,8 @@ n_sec_wav = 8
 rate_wav = 16000
 
 # 这是指rnn内核中的单元数量，同时，这也是rnn单元输出的结果维度数量
-lstm_num_units_encoder = 100
-lstm_num_units_decoder = 100
+lstm_num_units_encoder = 300
+lstm_num_units_decoder = 300
 # 分类的种类数量，前1000个音频文件，总共有186个单词，加一个空单词
 n_classes = 187
 
@@ -33,9 +33,11 @@ diminput = n_sec_wav * rate_wav
 num_rnn_layers = int(n_sec_wav * 1000 / 20)
 
 learning_rate = 0.001
+def learning_rate_reduce(r,iter):
+    return r*r/(r+iter)
 
 # 训练循环次数
-n_epoches = 10000
+n_epoches = 30
 
 # 所以考虑到内存爆炸，暂定5个文件为一个批次
 batch_size = 100
@@ -183,6 +185,11 @@ w_transit=tf.Variable(tf.random_normal(
 b_transit=tf.Variable(tf.zeros(shape=(lstm_num_units_decoder)))
 transit_out=tf.matmul(batch_lstm_o,w_transit)+b_transit
 
+w_transit2=tf.Variable(tf.random_normal(
+    shape=(lstm_num_units_decoder, lstm_num_units_decoder), dtype=tf.float32))
+b_transit2=tf.Variable(tf.zeros(shape=(lstm_num_units_decoder)))
+transit_out=tf.matmul(transit_out,w_transit2)+b_transit2
+
 lstm_cell = tf.nn.rnn_cell.BasicLSTMCell(num_units=lstm_num_units_decoder)
 
 decoder_outs, decoder_state = rnn_decoder_no_iteration(
@@ -226,6 +233,7 @@ with tf.Session() as sess:
     ini.run()
     n_iter = 0
     for i in range(n_epoches):
+        learning_rate=learning_rate_reduce(learning_rate,i)
         indexs=[]
         if (n_iter + batch_size > 1000):
             n_iter = 0
@@ -235,7 +243,7 @@ with tf.Session() as sess:
         opt.run(feed_dict={x: x_[n_iter:n_iter + batch_size], y: y_})
         print('i', i, 'train acc', acc.eval(feed_dict={x: x_[n_iter:n_iter + batch_size], y: y_}))
         saver.save(sess, save_path='save_sess/')
-        if (i % 100 == 0):
-            print('i', i, 'train acc', acc.eval(feed_dict={x: x_[n_iter:n_iter + batch_size], y: y_}))
-            saver.save(sess, save_path='save_sess/')
+        # if (i % 100 == 0):
+        #     print('i', i, 'train acc', acc.eval(feed_dict={x: x_[n_iter:n_iter + batch_size], y: y_}))
+        #     saver.save(sess, save_path='save_sess/')
         n_iter = n_iter + batch_size

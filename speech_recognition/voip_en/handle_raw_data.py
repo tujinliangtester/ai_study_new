@@ -121,7 +121,6 @@ def get_y(indexs,datapath,n):
 
 if __name__ == '__main__':
 
-    '''
     fpath = 'D:\\学习笔记\\ai\\dataSets\\data_voip_en\\tmpData\\'
     whole_file_list = get_file_names(fpath)
     wav_file_list = []
@@ -131,8 +130,8 @@ if __name__ == '__main__':
             trn_file_list.append(file)
         else:
             wav_file_list.append(file)
-    # print(len(wav_file_list))  39436
-    '''
+    print(wav_file_list[0])
+    # 39436
 
     '''
     end=0
@@ -178,8 +177,9 @@ if __name__ == '__main__':
     np.save('y1-y1_with_SPACE_TJL_onehot',y['onehot_encoded'])
     '''
 
+    '''
     indexs=[1,2,3]
     data_set_dir = 'D:\\学习笔记\\ai\\dataSets\\data_voip_en\\tmpData'
     max_line_char_num=20
     res=get_y(indexs=indexs, datapath=data_set_dir, n=max_line_char_num)
-
+    '''
