@@ -207,29 +207,27 @@ decoder_outs, decoder_state = rnn_decoder_no_iteration(
 
 sotfmax_outs = []
 weights = []
+loss = 0
+correct_prediction = 0
+
+i=0
 for decoder_out in decoder_outs:
     # 这里的softmax其实还是应该用不同的w和b，但可以先共用尝试着训练一下
     sotfmax_out = tf.nn.softmax(tf.matmul(decoder_out, W['w_sotfmax']) + B['b_sotfmax'])
+    print(sotfmax_out)
+    loss_tmp = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y[:, i, :], logits=sotfmax_out))
+    loss += loss_tmp
+    target = y[:, i, :]
+    correct_prediction += tf.cast(
+        tf.equal(tf.cast(tf.argmax(sotfmax_out, 1), tf.float32), tf.cast(tf.argmax(target, 1), tf.float32)), tf.float32)
     sotfmax_outs.append(sotfmax_out)
     weights.append(1)
+    i+=1
 # 此weights是代表，各个sotfmax_out之间的loss占总loss的权重，暂设为1
 # loss =  seq2seq_modifyed.sequence_loss(targets=y, logits=sotfmax_outs,weights=weights)
 
-loss = 0
-for i, sotfmax_out in enumerate(sotfmax_outs):
-    loss_tmp = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y[:, i, :], logits=sotfmax_out))
-    # 注意，如果这里用loss相乘的话，得到的模型，计算出acc会非常低，原因是什么呢？
-    # 有可能是因为这里的每一个decoder rnn不是通用的Varilble，相乘肯定会出问题？
-    loss += loss_tmp
-
 optm = tf.train.AdamOptimizer(learning_rate=learning_rate)
 opt = optm.minimize(loss=loss)
-
-correct_prediction = 0
-for i, logit in enumerate(sotfmax_outs):
-    target = y[:, i, :]
-    correct_prediction += tf.cast(
-        tf.equal(tf.cast(tf.argmax(logit, 1), tf.float32), tf.cast(tf.argmax(target, 1), tf.float32)), tf.float32)
 
 correct_prediction = correct_prediction / max_line_char_num
 acc = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
@@ -238,7 +236,7 @@ y_real = np.load('D:\\学习笔记\\ai\\dataSets\\data_voip_en\\y1_with_SPACE_TJ
 y_onehot = np.load('D:\\学习笔记\\ai\\dataSets\\data_voip_en\\y1_with_SPACE_TJL_onehot.npy')
 
 
-def sotfmax_out2real_word(sotfmax_out_argmax, y_onehot, y_real):
+def sotfmax_out2real_word(sotfmax_out, y_onehot, y_real):
     '''
     通过一个list，寻找onehot编码后的矩阵中对应的行，进而返回真实y的取值
     :param sotfmax_out: 模型预测的logit
@@ -247,16 +245,15 @@ def sotfmax_out2real_word(sotfmax_out_argmax, y_onehot, y_real):
     :return: 模型预测的真实y值
     '''
     max_line = 1000
-    sotfmax_out_argmax_tmp=sotfmax_out_argmax
+    sotfmax_out = list(sotfmax_out)
+    sotfmax_out_max_index = sotfmax_out.index(max(sotfmax_out))
     for i in range(max_line):
         y_onehot_tmp = y_onehot[i, :]
         y_onehot_max_index = y_onehot_tmp.argmax()
-        if (y_onehot_max_index==sotfmax_out_argmax_tmp):
+        if (sotfmax_out_max_index == y_onehot_max_index):
             print(i)
             return y_real[i]
 
-def get_sotfmax_outs():
-    return sotfmax_outs
 
 test_wav = ['D:/学习笔记/ai/dataSets/data_voip_en/tmpData/jurcic-001-120912_124317_0001940_0002325.wav']
 x_ = handle_raw_data.read_wavs(test_wav)
@@ -270,13 +267,13 @@ with tf.Session() as sess:
     indexs = [0]
     y_ = handle_raw_data.get_y(indexs=indexs, datapath=data_set_dir, n=max_line_char_num)
     sotfmax_outs_pre = []
+    print('acc:',acc.eval(feed_dict={x: x_[0:1], y: y_}))
     y_pre_list=[]
-    sotfmax_outs=sess.run([get_sotfmax_outs()],feed_dict={x: x_[0:1], y: y_})
-    for sotfmax_out in sotfmax_outs[0]:
-        sotfmax_out_argmax_eval=np.argmax(sotfmax_out)
-        print('sotfmax_out_argmax_eval:',sotfmax_out_argmax_eval)
-        sotfmax_outs_pre_tmp = sotfmax_out
+    for sotfmax_out in sotfmax_outs:
+        sotfmax_outs_pre_tmp = sotfmax_out.eval(feed_dict={x: x_[0:1], y: y_})
+        print('sotfmax_outs_pre_tmp:',sotfmax_outs_pre_tmp)
         sotfmax_outs_pre.append(sotfmax_outs_pre_tmp)
-        y_pre = sotfmax_out2real_word(sotfmax_out_argmax=sotfmax_out_argmax_eval, y_onehot=y_onehot, y_real=y_real)
+        y_pre = sotfmax_out2real_word(sotfmax_out=sotfmax_outs_pre_tmp, y_onehot=y_onehot, y_real=y_real)
         y_pre_list.append(y_pre)
+        # print('预测的单词是：', y_pre)
     print(y_pre_list)
