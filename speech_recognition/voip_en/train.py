@@ -39,7 +39,6 @@ def learning_rate_reduce(r,iter):
 # 训练循环次数
 n_epoches = 30
 
-# 所以考虑到内存爆炸，暂定5个文件为一个批次
 batch_size = 100
 
 data_set_dir='D:\\学习笔记\\ai\\dataSets\\data_voip_en\\tmpData'

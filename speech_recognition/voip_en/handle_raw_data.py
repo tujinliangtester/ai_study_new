@@ -16,7 +16,8 @@ def read_wavs(fname_list):
         rate, data = read(fname)
         shape1 = data.shape
         if (shape1[0] < shape_x):
-            data_0 = np.ones(shape=(shape_x - shape1[0]))
+            # data_0 = np.ones(shape=(shape_x - shape1[0]))
+            data_0 = np.zeros(shape=(shape_x - shape1[0]))
             # data.extend(data_0)
             data = np.append(data, data_0)
         data = np.mat(data)
@@ -130,9 +131,8 @@ if __name__ == '__main__':
             trn_file_list.append(file)
         else:
             wav_file_list.append(file)
-    print(wav_file_list[0])
+    print(wav_file_list[2])
     # 39436
-
     '''
     end=0
     for i in range(1,41):
@@ -146,8 +146,9 @@ if __name__ == '__main__':
         outputx_name='x'+str(i)
         np.save(outputx_name,x)
         x=0
-    '''
+        break
 
+    '''
     '''
     end = 0
     for i in range(1, 3):

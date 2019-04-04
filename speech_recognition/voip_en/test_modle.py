@@ -246,9 +246,8 @@ def sotfmax_out2real_word(sotfmax_out_argmax, y_onehot, y_real):
     :param y_real: 真实y列表
     :return: 模型预测的真实y值
     '''
-    max_line = 1000
     sotfmax_out_argmax_tmp=sotfmax_out_argmax
-    for i in range(max_line):
+    for i in range(y_onehot.shape[0]):
         y_onehot_tmp = y_onehot[i, :]
         y_onehot_max_index = y_onehot_tmp.argmax()
         if (y_onehot_max_index==sotfmax_out_argmax_tmp):
@@ -271,8 +270,8 @@ with tf.Session() as sess:
     y_ = handle_raw_data.get_y(indexs=indexs, datapath=data_set_dir, n=max_line_char_num)
     sotfmax_outs_pre = []
     y_pre_list=[]
-    sotfmax_outs=sess.run([get_sotfmax_outs()],feed_dict={x: x_[0:1], y: y_})
-    for sotfmax_out in sotfmax_outs[0]:
+    sotfmax_outs,acc_val=sess.run([get_sotfmax_outs(),acc],feed_dict={x: x_[0:1], y: y_})
+    for sotfmax_out in sotfmax_outs:
         sotfmax_out_argmax_eval=np.argmax(sotfmax_out)
         print('sotfmax_out_argmax_eval:',sotfmax_out_argmax_eval)
         sotfmax_outs_pre_tmp = sotfmax_out
@@ -280,3 +279,4 @@ with tf.Session() as sess:
         y_pre = sotfmax_out2real_word(sotfmax_out_argmax=sotfmax_out_argmax_eval, y_onehot=y_onehot, y_real=y_real)
         y_pre_list.append(y_pre)
     print(y_pre_list)
+    print(acc_val)
