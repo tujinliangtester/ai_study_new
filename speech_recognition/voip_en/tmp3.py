@@ -1,30 +1,37 @@
 import os
+import sys
+import platform
+import numpy as np
+import numpy.fft as nf
+import scipy.io.wavfile as wf
+from scipy.io.wavfile import read, write
 
-get_file_names_tmp_list = []
-def get_file_names(filepath):
-    files = os.listdir(filepath)
-    for fi in files:
-        fi_d = os.path.join(filepath, fi)
-        if os.path.isdir(fi_d):
-            get_file_names(fi_d)
-        else:
-            get_file_names_tmp_list.append(fi_d)
-    return get_file_names_tmp_list
+
+def time2freq(sigs,sample_rate):
+    freqs = nf.fftfreq(len(sigs),d=1/sample_rate)
+    ffts = nf.fft(sigs)
+    print('freqs:',freqs,freqs.shape)
+    print(ffts)
+    amps = np.abs(ffts)
+    print(amps)
+    return freqs,ffts,amps
+
+def read_wav():
+    rate_list = []
+    data_shape_list = []
+    s = 'D:\\学习笔记\\ai\\dataSets\\data_voip_en\\tmpData\\jurcic-001-120912_124317_0001940_0002325.wav'
+    fname_list = [s]
+    data = ''
+    rate=''
+    for fname in fname_list:
+        rate, data = read(fname)
+        rate_list.append(rate)
+        data_shape_list.append(data.shape)
+    print(data)
+    print(data.shape)
+    return rate, data
+
 
 if __name__=='__main__':
-    fpath = 'D:\\学习笔记\\ai\\dataSets\\data_voip_en\\tmpData\\'
-    whole_file_list = get_file_names(fpath)
-    wav_file_list = []
-    trn_file_list = []
-    for file in whole_file_list:
-        if (file.find('TRN') >= 0):
-            trn_file_list.append(file)
-        else:
-            wav_file_list.append(file)
-    num_list=[]
-    for file in trn_file_list:
-        with open(file) as f:
-            res=f.read()
-            res=res.split(' ')
-            num_list.append(len(res))
-    print(max(num_list))
+    rate, data=read_wav()
+    freqs, ffts, amps=time2freq(data,rate)

@@ -49,7 +49,7 @@ data_set_dir = 'D:\\学习笔记\\ai\\dataSets\\data_voip_en\\tmpData'
 x = tf.placeholder(shape=(None, diminput), dtype=tf.float32)
 y = tf.placeholder(shape=(None, max_line_char_num, n_classes), dtype=tf.float32)
 
-x_ = handle_raw_data.get_x(x_path='D:\\学习笔记\\ai\\dataSets\\data_voip_en\\x1.npy')
+# x_ = handle_raw_data.get_x(x_path='D:\\学习笔记\\ai\\dataSets\\data_voip_en\\x1.npy')
 
 W = {'w_decoder': tf.Variable(
     tf.random_normal(shape=(lstm_num_units_encoder * num_rnn_layers, lstm_num_units_decoder), dtype=tf.float32)),
@@ -252,30 +252,51 @@ for i, logit in enumerate(sotfmax_outs):
 
 correct_prediction = correct_prediction / max_line_char_num
 acc = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
+y_real = np.load('D:\\学习笔记\\ai\\dataSets\\data_voip_en\\y1_with_SPACE_TJL.npy')
+y_onehot = np.load('D:\\学习笔记\\ai\\dataSets\\data_voip_en\\y1_with_SPACE_TJL_onehot.npy')
+
+
+def sotfmax_out2real_word(sotfmax_out_argmax, y_onehot, y_real):
+    '''
+    通过一个list，寻找onehot编码后的矩阵中对应的行，进而返回真实y的取值
+    :param sotfmax_out: 模型预测的logit
+    :param y_onehot: onehot编码后的y矩阵
+    :param y_real: 真实y列表
+    :return: 模型预测的真实y值
+    '''
+    sotfmax_out_argmax_tmp=sotfmax_out_argmax
+    for i in range(y_onehot.shape[0]):
+        y_onehot_tmp = y_onehot[i, :]
+        y_onehot_max_index = y_onehot_tmp.argmax()
+        if (y_onehot_max_index==sotfmax_out_argmax_tmp):
+            print(i)
+            return y_real[i]
+
+def get_sotfmax_outs():
+    return sotfmax_outs
+
+
+test_wav = ['D:/学习笔记/ai/dataSets/data_voip_en/tmpData/jurcic-001-120912_124317_0001940_0002325.wav']
+x_ = handle_raw_data.read_wavs(test_wav)
+
 ini = tf.global_variables_initializer()
 
 with tf.Session() as sess:
     fw = tf.summary.FileWriter(logdir='logs/', graph=sess.graph)
     saver = tf.train.Saver()
-    ini.run()
-    n_iter = 0
-    for i in range(n_epoches):
-        learning_rate = learning_rate_reduce(learning_rate, i)
-        indexs = []
-        index_total=np.arange(0,x_.shape[0])
-        if (n_iter + batch_size > 1000):
-            n_iter = 0
-        for j in range(n_iter, n_iter + batch_size):
-            indexs.append(j)
-        y_ = handle_raw_data.get_y(indexs=indexs, datapath=data_set_dir, n=max_line_char_num)
-        y_total=handle_raw_data.get_y(indexs=index_total, datapath=data_set_dir, n=max_line_char_num)
-        opt.run(feed_dict={x: x_[n_iter:n_iter + batch_size], y: y_})
-        print('i:', i, 'train acc:', acc.eval(feed_dict={x: x_[n_iter:n_iter + batch_size], y: y_}))
-            # ,
-            #   'total acc:',acc.eval(feed_dict={x: x_, y: y_total}))
-
-        saver.save(sess, save_path='save_sess/')
-        # if (i % 100 == 0):
-        #     print('i', i, 'train acc', acc.eval(feed_dict={x: x_[n_iter:n_iter + batch_size], y: y_}))
-        #     saver.save(sess, save_path='save_sess/')
-        n_iter = n_iter + batch_size
+    saver.restore(sess, 'save_sess/')
+    indexs = [0]
+    y_ = handle_raw_data.get_y(indexs=indexs, datapath=data_set_dir, n=max_line_char_num)
+    sotfmax_outs_pre = []
+    y_pre_list = []
+    sotfmax_outs, acc_val = sess.run([get_sotfmax_outs(), acc], feed_dict={x: x_[0:1], y: y_})
+    for sotfmax_out in sotfmax_outs:
+        sotfmax_out_argmax_eval = np.argmax(sotfmax_out)
+        print('sotfmax_out_argmax_eval:', sotfmax_out_argmax_eval)
+        sotfmax_outs_pre_tmp = sotfmax_out
+        sotfmax_outs_pre.append(sotfmax_outs_pre_tmp)
+        y_pre = sotfmax_out2real_word(sotfmax_out_argmax=sotfmax_out_argmax_eval, y_onehot=y_onehot, y_real=y_real)
+        y_pre_list.append(y_pre)
+    print(y_pre_list)
+    print(acc_val)
