@@ -9,6 +9,23 @@ rate_wav = 16000
 # 代表空单词
 SPACE_TJL='SPACE_TJL'
 
+#单词数量
+words_num=0
+
+#音频长度
+wav_lenth=0
+
+#截取长度，毫秒
+split_lenth=1000
+
+#步长
+step_lenth=split_lenth/2
+
+#平均一秒钟对应的单词数，取每秒钟2个单词
+words_num_per_min=1.49
+
+
+
 def read_wavs(fname_list):
     x = np.mat(np.zeros(shape=(1, n_sec_wav * rate_wav)))
     shape_x = n_sec_wav * rate_wav
@@ -53,6 +70,22 @@ def read_wav():
     rate    16000
     n_sec_wav   6s
     '''
+
+def read_wav_2(s):
+    rate_list = []
+    data_shape_list = []
+    fname_list = [s]
+    data = ''
+    for fname in fname_list:
+        rate, data = read(fname)
+        rate_list.append(rate)
+        data_shape_list.append(data.shape)
+    '''
+        rate    16000
+        n_sec_wav   6s
+    '''
+    return data.shape
+
 
 get_file_names_tmp_list = []
 def get_file_names(filepath):
@@ -144,6 +177,27 @@ if __name__ == '__main__':
             wav_file_list.append(file)
     print(wav_file_list[2])
     # 39436
+    flag=True
+    words_num_whole=0
+    wav_lenth_whole=0
+    for i in range(len(whole_file_list)):
+        if(flag==False):
+            flag=True
+            continue
+        file=whole_file_list[i]
+        if (file.find('TRN') >= 0):
+            content=read_trn(file)
+            if(len(content)==0):
+                flag=False
+                continue
+            else:
+                words_num_whole+=len(content)
+        else:
+            tmp_length=read_wav_2(file)
+            wav_lenth_whole+=tmp_length[0]
+    print('words_num_whole:',words_num_whole)
+    print('wav_lenth_whole:',wav_lenth_whole)
+
     '''
     end=0
     for i in range(1,41):

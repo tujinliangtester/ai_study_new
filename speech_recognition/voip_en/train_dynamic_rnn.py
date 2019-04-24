@@ -11,8 +11,10 @@ import numpy.fft as nf
 # 这里有问题，用了这个就不能用placeholder和session了。。。有时间了还是需要好好研究一下
 # tf.enable_eager_execution()
 
+
+
 # 一条数据的秒数
-n_sec_wav = 3
+n_sec_wav = 8
 # 采样率
 rate_wav = 16000
 
@@ -20,10 +22,10 @@ rate_wav = 16000
 lstm_num_units_encoder = 100
 lstm_num_units_decoder = 100
 # 分类的种类数量，前1000个音频文件，总共有186个单词，加一个空单词
-n_classes = 6
+n_classes = 187
 
 # 每个音频文件的单词数量，在前1000条音频文件中，最大的有18个单词，暂取20个
-max_line_char_num = 3
+max_line_char_num = 18
 
 # 一个音频文件的大小
 diminput = n_sec_wav * rate_wav
@@ -42,20 +44,14 @@ def learning_rate_reduce(r, iter):
 # 训练循环次数
 n_epoches = 1000
 
-batch_size = 1
+batch_size = 100
 
-# data_set_dir = 'E:\\tjl_ai\\dataSet\\tmp'
-data_set_dir = 'D:\\学习笔记\\ai\\dataSets\\data_voip_en\\oneRecord\\'
-
-# data_set_dir = 'D:\\学习笔记\\ai\\dataSets\\data_voip_en\\tmpData'
-# 'jurcic-004-130704_200818_0005259_0005347'
-# jurcic-003-121018_214322_0005935_0006068
-# jurcic-003-121018_215237_0003515_0003725
+data_set_dir = 'D:\\学习笔记\\ai\\dataSets\\data_voip_en\\tmpData'
 
 x = tf.placeholder(shape=(None, diminput), dtype=tf.float32)
 y = tf.placeholder(shape=(None, max_line_char_num, n_classes), dtype=tf.float32)
 
-x_ = handle_raw_data.get_x(x_path=data_set_dir+'x1.npy')
+x_ = handle_raw_data.get_x(x_path='D:\\学习笔记\\ai\\dataSets\\data_voip_en\\x1.npy')
 
 W = {'w_decoder': tf.Variable(
     tf.random_normal(shape=(lstm_num_units_encoder * num_rnn_layers, lstm_num_units_decoder), dtype=tf.float32)),
@@ -84,9 +80,7 @@ def time2freq(sigs,sample_rate):
 
 
 def RNN(x, num_rnn_layers=num_rnn_layers):
-    print('x shape:',x.shape)
     _,x = time2freq(x, rate_wav)
-    print('x shape:',x.shape)
     x = tf.split(x, num_rnn_layers, axis=1)
     lstm_cell = tf.nn.rnn_cell.BasicLSTMCell(num_units=lstm_num_units_encoder)
     LSTM_O, LSTM_S = rnn.static_rnn(lstm_cell, x, dtype=tf.float32)
@@ -241,10 +235,6 @@ for decoder_out in decoder_outs:
 loss = 0
 for i, sotfmax_out in enumerate(sotfmax_outs):
     loss_tmp = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y[:, i, :], logits=sotfmax_out))
-    # if(i==0):
-    #     loss=loss_tmp
-    # else:
-    #     loss*=loss_tmp
     loss += loss_tmp
 
 optm = tf.train.AdamOptimizer(learning_rate=learning_rate)
@@ -273,15 +263,9 @@ with tf.Session() as sess:
             n_iter = 0
         for j in range(n_iter, n_iter + batch_size):
             indexs.append(j)
-        indexs = [0,1]
-
         y_ = handle_raw_data.get_y(indexs=indexs, datapath=data_set_dir, n=max_line_char_num)
+        y_total=handle_raw_data.get_y(indexs=index_total, datapath=data_set_dir, n=max_line_char_num)
         opt.run(feed_dict={x: x_[n_iter:n_iter + batch_size], y: y_})
         print('i:', i, 'train acc:', acc.eval(feed_dict={x: x_[n_iter:n_iter + batch_size], y: y_}))
-
         saver.save(sess, save_path='save_sess/')
-        # if (i % 100 == 0):
-        #     print('i', i, 'train acc', acc.eval(feed_dict={x: x_[n_iter:n_iter + batch_size], y: y_}))
-        #     saver.save(sess, save_path='save_sess/')
-        # n_iter = n_iter + batch_size
-        n_iter=0
+        n_iter = n_iter + batch_size

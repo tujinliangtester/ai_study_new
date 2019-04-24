@@ -3,16 +3,20 @@ from scipy.io.wavfile import read, write
 import os
 from common import OneHot
 
-n_sec_wav = 8
+n_sec_wav = 3
 rate_wav = 16000
 
 # 代表空单词
 SPACE_TJL='SPACE_TJL'
+tmp_dpath = 'D:\\学习笔记\\ai\\dataSets\\data_voip_en\\oneRecord\\'
+
 
 def read_wavs(fname_list):
     x = np.mat(np.zeros(shape=(1, n_sec_wav * rate_wav)))
     shape_x = n_sec_wav * rate_wav
     for i, fname in enumerate(fname_list):
+        tmp_dpath='D:\\学习笔记\\ai\\dataSets\\data_voip_en\\oneRecord\\'
+        fname=tmp_dpath+fname
         rate, data = read(fname)
         shape1 = data.shape
         if (shape1[0] < shape_x):
@@ -23,19 +27,10 @@ def read_wavs(fname_list):
         data = np.mat(data)
         x = np.vstack((x, data))
         # x.append(data)
-        if (i % 100 == 0):
-            print(i, x[i:i + 1, :])
+        # if (i % 100 == 0):
+        #     print(i, x[i:i + 1, :])
     return x[1:]
 
-def read_wavs_as_array(fname_list):
-    x=None
-    for i, fname in enumerate(fname_list):
-        rate, data = read(fname)
-        x=np.array(data)
-        # x.append(data)
-        if (i % 100 == 0):
-            print(i, x[i:i + 1, :])
-    return x[1:]
 
 def read_wav():
     rate_list = []
@@ -67,6 +62,8 @@ def get_file_names(filepath):
 
 
 def read_trn(fpath):
+    tmp_dpath = 'D:\\学习笔记\\ai\\dataSets\\data_voip_en\\oneRecord\\'
+    fpath = tmp_dpath + fpath
     with open(fpath) as f:
         res = f.read()
         return res.split(' ')
@@ -123,34 +120,38 @@ def get_y(indexs,datapath,n):
         for i in range(n-len(y_tmp)):
             y_tmp.append(SPACE_TJL)
         y_onehot_tmp=map_y_onehot(y_tmp,
-                                  # y_fpath='D:\\学习笔记\\ai\\dataSets\\data_voip_en\\y1_with_SPACE_TJL.npy',
-                                  # y_onehot_fpath='D:\\学习笔记\\ai\\dataSets\\data_voip_en\\y1_with_SPACE_TJL_onehot.npy')
-                                  y_fpath='D:\\学习笔记\\ai\\dataSets\\data_voip_en\\oneRecord\\y1_with_SPACE_TJL.npy',
-                                  y_onehot_fpath='D:\\学习笔记\\ai\\dataSets\\data_voip_en\\oneRecord\\y1_with_SPACE_TJL_onehot.npy')
+                                  y_fpath='D:\\学习笔记\\ai\\dataSets\\data_voip_en\\y1_with_SPACE_TJL.npy',
+                                  y_onehot_fpath='D:\\学习笔记\\ai\\dataSets\\data_voip_en\\y1_with_SPACE_TJL_onehot.npy')
         y_onehot_tmp_mat=np.mat(y_onehot_tmp)
         y_batch.append(y_onehot_tmp_mat)
     return y_batch
 
 if __name__ == '__main__':
+    wav_file_list=['jurcic-003-121018_215237_0003515_0003725.wav','jurcic-003-121018_214322_0005935_0006068.wav']
+    trn_file_list=['jurcic-003-121018_215237_0003515_0003725.wav.trn','jurcic-003-121018_214322_0005935_0006068.wav.trn']
+    '''
 
     fpath = 'D:\\学习笔记\\ai\\dataSets\\data_voip_en\\tmpData\\'
     whole_file_list = get_file_names(fpath)
     wav_file_list = []
     trn_file_list = []
     for file in whole_file_list:
-        if (file.find('TRN') >= 0):
+        if (file.find('TRN') >= 0 or file.find('trn')>=0):
             trn_file_list.append(file)
         else:
             wav_file_list.append(file)
     print(wav_file_list[2])
     # 39436
     '''
+    '''
+
     end=0
     for i in range(1,41):
         start=end
         end=i*1000
         if(end>39436):
             end=39436
+        end=2
         x=read_wavs(wav_file_list[start:end])
         print(x[0])
         print(x.shape)
@@ -161,21 +162,21 @@ if __name__ == '__main__':
 
     '''
     '''
+
     end = 0
-    for i in range(1, 3):
+    for i in range(0, 1):
         y_word = []
         start = end
-        end = i * 1000
+        end = 2
         for file in trn_file_list[start:end]:
             y_word=y_word+read_trn(file)
         output_y_name = 'y' + str(i)
         np.save(output_y_name, y_word)
         print(len(y_word))
         print(y_word[0])
-    '''
 
     '''
-    y1=np.load('D:\\学习笔记\\ai\\dataSets\\data_voip_en\\y1.npy')
+    y1=np.load(tmp_dpath+'y0.npy')
     # y2=np.load('D:\\学习笔记\\ai\\dataSets\\data_voip_en\\y2.npy')
     y1=list(y1)
     # y2=list(y2)
@@ -187,7 +188,6 @@ if __name__ == '__main__':
     print(type(y))
     print(y['onehot_encoded'].shape)
     np.save('y1-y1_with_SPACE_TJL_onehot',y['onehot_encoded'])
-    '''
 
     '''
     indexs=[1,2,3]
