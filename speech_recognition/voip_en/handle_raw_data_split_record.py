@@ -7,24 +7,26 @@ n_sec_wav = 8
 rate_wav = 16000
 
 # 代表空单词
-SPACE_TJL='SPACE_TJL'
+SPACE_TJL = 'SPACE_TJL'
 
-#单词数量
-words_num=0
+# 单词数量
+words_num = 0
 
-#音频长度
-wav_lenth=0
+# 音频长度
+wav_lenth = 0
 
-#截取长度，毫秒*rate
-split_lenth=1*rate_wav
+# 截取长度，毫秒*rate
+split_lenth = 1 * rate_wav
 
-#步长
-step_lenth=int(split_lenth/2)
+# 步长
+step_lenth = int(split_lenth / 2)
 
-#平均一秒钟对应的单词数，取每秒钟2个单词
-words_num_per_min=1.49
-words_num_per_split=2
+# 平均一秒钟对应的单词数，取每秒钟2个单词
+words_num_per_min = 1.49
+words_num_per_split = int(2 * split_lenth / rate_wav)
 
+# 针对trn大小写的兼容性问题
+trn_name = 'trn'
 
 
 def read_wavs(fname_list):
@@ -45,15 +47,17 @@ def read_wavs(fname_list):
             print(i, x[i:i + 1, :])
     return x[1:]
 
+
 def read_wavs_as_array(fname_list):
-    x=None
+    x = None
     for i, fname in enumerate(fname_list):
         rate, data = read(fname)
-        x=np.array(data)
+        x = np.array(data)
         # x.append(data)
         if (i % 100 == 0):
             print(i, x[i:i + 1, :])
     return x[1:]
+
 
 def read_wav():
     rate_list = []
@@ -73,6 +77,7 @@ def read_wav():
     n_sec_wav   6s
     '''
 
+
 def read_wav_2(s):
     rate_list = []
     data_shape_list = []
@@ -90,6 +95,8 @@ def read_wav_2(s):
 
 
 get_file_names_tmp_list = []
+
+
 def get_file_names(filepath):
     files = os.listdir(filepath)
     for fi in files:
@@ -106,14 +113,16 @@ def read_trn(fpath):
         res = f.read()
         return res.split(' ')
 
-def load_data(one_hot=True,filepath='D:\\学习笔记\\ai\\dataSets\\number-wav-data\\'):
+
+def load_data(one_hot=True, filepath='D:\\学习笔记\\ai\\dataSets\\number-wav-data\\'):
     # 已经调用方法将音频文件转换成矩阵文件
-    data = np.load(filepath )
-    if(one_hot==True):
-        data=OneHot.sklearn_one_hot(data)['onehot_encoded']
+    data = np.load(filepath)
+    if (one_hot == True):
+        data = OneHot.sklearn_one_hot(data)['onehot_encoded']
     return data
 
-def map_y_onehot(y_list,y_fpath,y_onehot_fpath):
+
+def map_y_onehot(y_list, y_fpath, y_onehot_fpath):
     '''
 
     :param y_list: 一条音频文件对应的单词列表
@@ -121,12 +130,12 @@ def map_y_onehot(y_list,y_fpath,y_onehot_fpath):
     :param y_onehot_fpath: 已经读取后的包含所有单词的y的onehot编码文件
     :return:返回这条音频文件单词对应的onehot编码列表
     '''
-    y_data=list(np.load(y_fpath))
-    y_onehot_data=np.load(y_onehot_fpath)
-    tmp_list=[]
+    y_data = list(np.load(y_fpath))
+    y_onehot_data = np.load(y_onehot_fpath)
+    tmp_list = []
     for y in y_list:
-        index=y_data.index(y)
-        tmp_list.append(y_onehot_data[index,:])
+        index = y_data.index(y)
+        tmp_list.append(y_onehot_data[index, :])
     return tmp_list
 
 
@@ -138,31 +147,29 @@ def get_x(x_path):
     '''
     return np.load(x_path)
 
-def get_y(indexs,datapath,n):
+
+def get_y(indexs):
     '''
     :param indexs: x对应的索引列表，也是y对应的索引列表（x与y是相同的文件名）
-    :param datapath::TRN文件所在目录
-    :param n::一条音频文件对应的单词数量，不足的，用空补充
     :return:这些索引对应x的单词，经过onehot编码后的矩阵
     '''
-    fpath =datapath
-    whole_file_list = get_file_names(fpath)
-    trn_file_list = []
-    y_batch=[]
-    for file in whole_file_list:
-        if (file.find('TRN') >= 0):
-            trn_file_list.append(file)
+    y_splited_with_space_tjl=np.load('E:\\tjl_ai\\dataSet\\tmpOut\\'+'y_splited.npy')
+    y_list_with_space_tjl=list(np.load('E:\\tjl_ai\\dataSet\\tmpOut\\'+'y_with_SPACE_TJL.npy'))
+    y_with_SPACE_TJL_onehot=np.load('E:\\tjl_ai\\dataSet\\tmpOut\\'+'y_with_SPACE_TJL_onehot.npy')
+
+    y_batch = []
+
     for index in indexs:
-        trn_file=trn_file_list[index]
-        y_tmp=read_trn(trn_file)
-        for i in range(n-len(y_tmp)):
-            y_tmp.append(SPACE_TJL)
-        y_onehot_tmp=map_y_onehot(y_tmp,
-                                  y_fpath='D:\\学习笔记\\ai\\dataSets\\data_voip_en\\y1_with_SPACE_TJL.npy',
-                                  y_onehot_fpath='D:\\学习笔记\\ai\\dataSets\\data_voip_en\\y1_with_SPACE_TJL_onehot.npy')
-        y_onehot_tmp_mat=np.mat(y_onehot_tmp)
-        y_batch.append(y_onehot_tmp_mat)
+        y_tmp=[]
+        y_line = list(y_splited_with_space_tjl[index,])
+        for word_tmp in y_line:
+            i=y_list_with_space_tjl.index(word_tmp)
+            y_onehot_tmp_line=y_with_SPACE_TJL_onehot[i]
+            y_tmp.append(y_onehot_tmp_line)
+        y_tmp=np.mat(y_tmp)
+        y_batch.append(y_tmp)
     return y_batch
+
 
 def get_words_wav_num_whole(whole_file_list):
     flag = True
@@ -173,7 +180,7 @@ def get_words_wav_num_whole(whole_file_list):
             flag = True
             continue
         file = whole_file_list[i]
-        if (file.find('TRN') >= 0):
+        if (file.find(trn_name) >= 0):
             content = read_trn(file)
             if (len(content) == 0):
                 flag = False
@@ -186,6 +193,7 @@ def get_words_wav_num_whole(whole_file_list):
     print('words_num_whole:', words_num_whole)
     print('wav_lenth_whole:', wav_lenth_whole)
 
+
 def split_wav_fun(x, file_data, split_lenth):
     '''
     切分音频文件，返回叠加后的x矩阵及切分个数
@@ -197,30 +205,31 @@ def split_wav_fun(x, file_data, split_lenth):
     x:返回叠加后的x矩阵
     i:返回总共切分成了多少个
     '''
-    data=file_data
-    i=0
-    while(len(data) > split_lenth):
-        res_tmp= data[:split_lenth]
-        res_tmp=np.mat(res_tmp)
-        x = np.vstack((x, res_tmp))
-        i+=1
-        #步进
-        data=data[step_lenth:]
-    if(len(data)==split_lenth):
+    data = file_data
+    i = 0
+    while (len(data) > split_lenth):
         res_tmp = data[:split_lenth]
-        res_tmp=np.mat(res_tmp)
+        res_tmp = np.mat(res_tmp)
+        x = np.vstack((x, res_tmp))
+        i += 1
+        # 步进
+        data = data[step_lenth:]
+    if (len(data) == split_lenth):
+        res_tmp = data[:split_lenth]
+        res_tmp = np.mat(res_tmp)
 
         x = np.vstack((x, res_tmp))
-        i+=1
-    if(len(data)<split_lenth):
-        #如果音频文件不足，则取前面的
-        res_tmp= file_data[-split_lenth:]
-        res_tmp=np.mat(res_tmp)
+        i += 1
+    if (len(data) < split_lenth):
+        # 如果音频文件不足，则取前面的
+        res_tmp = file_data[-split_lenth:]
+        res_tmp = np.mat(res_tmp)
         x = np.vstack((x, res_tmp))
-        i+=1
-    return x,i
+        i += 1
+    return x, i
 
-def split_trn_fun(y,words_list,split_num):
+
+def split_trn_fun(y, words_list, split_num):
     '''
     根据音频文件切分的个数，对对应的trn文件单词进行切分
     :param y: 单词切分后的矩阵
@@ -232,9 +241,9 @@ def split_trn_fun(y,words_list,split_num):
     while (len(words_list) < words_num_per_split):
         words_list.append(SPACE_TJL)
     for i in range(split_num):
-        start=int(i*words_num_per_split/2)
-        end=start+words_num_per_split
-        if(end+1>len(words_list)):
+        start = int(i * words_num_per_split / 2)
+        end = start + words_num_per_split
+        if (end + 1 > len(words_list)):
             res_tmp = words_list[-words_num_per_split:]
             res_tmp = np.mat(res_tmp)
             y = np.vstack((y, res_tmp))
@@ -253,81 +262,62 @@ def split_wav_trn(whole_file_list):
     '''
     x = np.mat(np.zeros(shape=(1, split_lenth)))
     y = np.mat(np.zeros(shape=(1, words_num_per_split)))
+    j=0
     for file in whole_file_list:
-        if (file.find('TRN') < 0):
-            _,wav_data=read(file)
-            x,i=split_wav_fun(x,wav_data,split_lenth)
-            trn_file=file+'.TRN'
-            words_list=read_trn(trn_file)
-            y=split_trn_fun(y,words_list,i)
-    return x[1:,],y[1:,]
+        j+=1
+        if(j%100==0):
+            print(j)
+        if (file.find(trn_name) < 0):
+            _, wav_data = read(file)
+            x, i = split_wav_fun(x, wav_data, split_lenth)
+            trn_file = file + '.' + trn_name
+            words_list = read_trn(trn_file)
+            y = split_trn_fun(y, words_list, i)
+    return x[1:, ], y[1:, ]
 
-if __name__ == '__main__':
+def save_word_list(trn_file_list):
+    y_word = []
+    for file in trn_file_list:
+        y_word=y_word+read_trn(file)
+    output_y_name = 'y_list'
+    np.save(output_y_name, y_word)
+    print(len(y_word))
+    print(y_word[0])
 
-    fpath = 'D:\\学习笔记\\ai\\dataSets\\data_voip_en\\tmpData\\'
-    whole_file_list = get_file_names(fpath)
-    # wav_file_list = []
-    # trn_file_list = []
-    # for file in whole_file_list:
-    #     if (file.find('TRN') >= 0):
-    #         trn_file_list.append(file)
-    #     else:
-    #         wav_file_list.append(file)
-    # 39436
-
-    x,y=split_wav_trn(whole_file_list[:100])
-    print('x:',x)
-    print('y:',y)
-    np.save('x',x)
-    np.save('y',y)
-    '''
-    end=0
-    for i in range(1,41):
-        start=end
-        end=i*1000
-        if(end>39436):
-            end=39436
-        x=read_wavs(wav_file_list[start:end])
-        print(x[0])
-        print(x.shape)
-        outputx_name='x'+str(i)
-        np.save(outputx_name,x)
-        x=0
-        break
-
-    '''
-    '''
-    end = 0
-    for i in range(1, 3):
-        y_word = []
-        start = end
-        end = i * 1000
-        for file in trn_file_list[start:end]:
-            y_word=y_word+read_trn(file)
-        output_y_name = 'y' + str(i)
-        np.save(output_y_name, y_word)
-        print(len(y_word))
-        print(y_word[0])
-    '''
-
-    '''
-    y1=np.load('D:\\学习笔记\\ai\\dataSets\\data_voip_en\\y1.npy')
-    # y2=np.load('D:\\学习笔记\\ai\\dataSets\\data_voip_en\\y2.npy')
+def save_word_onehot(y_word_path):
+    y1=np.load(y_word_path)
     y1=list(y1)
-    # y2=list(y2)
     y1.append(SPACE_TJL)
     y=y1
-    np.save('y1_with_SPACE_TJL',y)
+    np.save('y_with_SPACE_TJL',y)
     y=OneHot.sklearn_one_hot(y)
     print('y_onehot', y)
     print(type(y))
     print(y['onehot_encoded'].shape)
-    np.save('y1-y1_with_SPACE_TJL_onehot',y['onehot_encoded'])
-    '''
+    np.save('y_with_SPACE_TJL_onehot',y['onehot_encoded'])
 
-    '''
-    indexs=[1,2,3]
-    data_set_dir = 'D:\\学习笔记\\ai\\dataSets\\data_voip_en\\tmpData'
-    max_line_char_num=20
-    res=get_y(indexs=indexs, datapath=data_set_dir, n=max_line_char_num)
-    '''
+if __name__ == '__main__':
+    # fpath = 'D:\\学习笔记\\ai\\dataSets\\data_voip_en\\tmpData\\'
+    fpath = 'E:\\tjl_ai\\dataSet\\tmp\\'
+    whole_file_list = get_file_names(fpath)
+    wav_file_list = []
+    trn_file_list = []
+    for file in whole_file_list:
+        if (file.find(trn_name) >= 0):
+            trn_file_list.append(file)
+        else:
+            wav_file_list.append(file)
+
+    x, y = split_wav_trn(whole_file_list)
+    print('x:', x)
+    print('y:', y)
+    np.save('x_splited', x)
+    np.save('y_splited', y)
+
+    save_word_list(trn_file_list)
+
+    cur_path='E:\\tjl\\AI\\语音识别\\ai_study_new\\speech_recognition\\voip_en\\y_list.npy'
+    save_word_onehot(cur_path)
+
+
+

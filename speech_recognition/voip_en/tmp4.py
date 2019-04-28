@@ -1,9 +1,4 @@
 import numpy as np
 
-from tensorflow.contrib import rnn
-import tensorflow as tf
-from tensorflow.contrib import legacy_seq2seq
-
-a=[1,2,3,4,5]
-
-print(a[-3:])
+a=np.load('E:\\tjl_ai\\dataSet\\tmpOut\\'+'y_with_SPACE_TJL_onehot.npy')
+print(a.shape)
