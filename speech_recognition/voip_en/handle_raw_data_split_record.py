@@ -157,8 +157,8 @@ def get_y(indexs):
     y_list_with_space_tjl=list(np.load('E:\\tjl_ai\\dataSet\\tmpOut\\'+'y_with_SPACE_TJL.npy'))
     y_with_SPACE_TJL_onehot=np.load('E:\\tjl_ai\\dataSet\\tmpOut\\'+'y_with_SPACE_TJL_onehot.npy')
 
-    y_batch = []
-
+    # y_batch = np.array((1,2,y_with_SPACE_TJL_onehot.shape[1]))
+    y_batch=[]
     for index in indexs:
         y_tmp=[]
         y_line = list(y_splited_with_space_tjl[index,])

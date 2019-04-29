@@ -15,7 +15,7 @@ rate_wav = 16000
 #截取后的秒数
 n_sec_wav=1
 
-# 截取长度，毫秒*rate
+# 截取长度，秒*rate
 split_lenth = 1 * rate_wav
 
 
@@ -36,18 +36,18 @@ diminput = n_sec_wav * rate_wav
 # 所以，num_rnn_layers=一条数据秒数*1000/20
 num_rnn_layers = int(n_sec_wav * 1000 / 20)
 
-learning_rate = 0.001
+learning_rate = 0.0001
 
-data_line_nums=551
+data_line_nums=3306
 
 def learning_rate_reduce(r, iter):
     return r * r / (r + iter)
 
 
 # 训练循环次数
-n_epoches = 1
+n_epoches = 100000
 
-batch_size = 1
+batch_size = 1000
 
 # data_set_dir = 'D:\\学习笔记\\ai\\dataSets\\data_voip_en\\tmpData'
 data_set_dir = 'E:\\tjl_ai\\dataSet\\tmpOut\\'
@@ -274,14 +274,14 @@ with tf.Session() as sess:
             indexs.append(j)
         y_ = handle_raw_data_split_record.get_y(indexs=indexs)
         opt.run(feed_dict={x: x_[n_iter:n_iter + batch_size], y: y_})
-        print('i:', i, 'train acc:', acc.eval(feed_dict={x: x_[n_iter:n_iter + batch_size], y: y_}))
-        print('x:',x_[0])
-        print('y:',y_[0].shape)
+        # print('i:', i, 'train acc:', acc.eval(feed_dict={x: x_[n_iter:n_iter + batch_size], y: y_}))
+        # print('x:',x_[:10])
+        # print('y:',y_[:][1][:])
             # ,
             #   'total acc:',acc.eval(feed_dict={x: x_, y: y_total}))
 
-        saver.save(sess, save_path='save_sess/')
-        # if (i % 100 == 0):
-        #     print('i', i, 'train acc', acc.eval(feed_dict={x: x_[n_iter:n_iter + batch_size], y: y_}))
-        #     saver.save(sess, save_path='save_sess/')
+        # saver.save(sess, save_path='save_sess/')
+        if (i % 100 == 0):
+            print('i', i, 'train acc', acc.eval(feed_dict={x: x_[n_iter:n_iter + batch_size], y: y_}))
+            saver.save(sess, save_path='save_sess/')
         n_iter = n_iter + batch_size
