@@ -38,7 +38,7 @@ diminput = n_sec_wav * rate_wav
 # 所以，num_rnn_layers=一条数据秒数*1000/20
 num_rnn_layers = int(n_sec_wav * 1000 / 20)
 
-learning_rate = 0.0001
+learning_rate = 0.1
 
 data_line_nums=3306
 
@@ -268,7 +268,8 @@ with tf.Session() as sess:
     ini.run()
     n_iter = 0
     for i in range(n_epoches):
-        learning_rate = learning_rate_reduce(learning_rate, i)
+        # learning_rate = learning_rate_reduce(learning_rate, i)
+        learning_rate=tf.train.inverse_time_decay(learning_rate, i, 1000, 0.5, staircase=False)
         indexs = []
         if (n_iter + batch_size > data_line_nums):
             n_iter = 0
@@ -276,16 +277,11 @@ with tf.Session() as sess:
             indexs.append(j)
         y_ = handle_raw_data_split_record.get_y(indexs=indexs)
         opt.run(feed_dict={x: x_[n_iter:n_iter + batch_size], y: y_})
-        # print('i:', i, 'train acc:', acc.eval(feed_dict={x: x_[n_iter:n_iter + batch_size], y: y_}))
-        # print('x:',x_[:10])
-        # print('y:',y_[:][1][:])
-            # ,
-            #   'total acc:',acc.eval(feed_dict={x: x_, y: y_total}))
 
-        # saver.save(sess, save_path='save_sess/')
         if (i % 100 == 0):
             print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) ,'i', i, 'train acc', acc.eval(feed_dict={x: x_[n_iter:n_iter + batch_size], y: y_}))
-            saver.save(sess, save_path='save_sess/')
+            saver.save(sess, save_path='train_splited_data_inverse_time_decay_save_sess/')
+
         #发送邮件
         if (i % 499 == 0):
             msg=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) +'\t'+'i'+'\t'+str(i)+'\t'+ 'train acc'+'\t'+ str(acc.eval(feed_dict={x: x_[n_iter:n_iter + batch_size], y: y_}))
