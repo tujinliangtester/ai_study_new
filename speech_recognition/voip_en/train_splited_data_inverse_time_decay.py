@@ -38,7 +38,7 @@ diminput = n_sec_wav * rate_wav
 # 所以，num_rnn_layers=一条数据秒数*1000/20
 num_rnn_layers = int(n_sec_wav * 1000 / 20)
 
-learning_rate = 0.1
+learning_rate = 0.001
 
 data_line_nums=3306
 
@@ -49,7 +49,7 @@ def learning_rate_reduce(r, iter):
 # 训练循环次数
 n_epoches = 100000
 
-batch_size = 1000
+batch_size = 100
 
 # data_set_dir = 'D:\\学习笔记\\ai\\dataSets\\data_voip_en\\tmpData'
 data_set_dir = 'E:\\tjl_ai\\dataSet\\tmpOut\\'
