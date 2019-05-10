@@ -97,7 +97,9 @@ def RNN(x, num_rnn_layers=num_rnn_layers):
 
 encoder_rnn = RNN(x, num_rnn_layers=num_rnn_layers)
 batch_lstm_os = encoder_rnn['LSTM_O']
-batch_lstm_o = tf.concat(batch_lstm_os, axis=1)
+#尝试不concat试试，不过可能效果不会很好，因为之前这样处理过的。。。
+# batch_lstm_o = tf.concat(batch_lstm_os, axis=1)
+batch_lstm_o=batch_lstm_os[-1]
 
 
 # 采用loop fun来构建decoder
@@ -213,7 +215,7 @@ def rnn_decoder_no_iteration(decoder_inputs,
 # 注意，这里为了能保证在decoder计算时，不会出现维度不匹配的情况，需要先将encoder的输出结果进行一次处理
 # 处理方式暂用全连接，名称为 transit 层，但需要留意其中的维度设置
 w_transit = tf.Variable(tf.random_normal(
-    shape=(lstm_num_units_encoder * num_rnn_layers, lstm_num_units_decoder), dtype=tf.float32))
+    shape=(lstm_num_units_encoder , lstm_num_units_decoder), dtype=tf.float32))
 b_transit = tf.Variable(tf.zeros(shape=(lstm_num_units_decoder)))
 transit_out = tf.matmul(batch_lstm_o, w_transit) + b_transit
 
@@ -276,14 +278,19 @@ with tf.Session() as sess:
         for j in range(n_iter, n_iter + batch_size):
             indexs.append(j)
         y_ = handle_raw_data_split_record.get_y(indexs=indexs)
+        indexs_total=np.arange(data_line_nums)
+        y_total = handle_raw_data_split_record.get_y(indexs=indexs_total)
         opt.run(feed_dict={x: x_[n_iter:n_iter + batch_size], y: y_})
 
         if (i % 100 == 0):
             print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) ,'i', i, 'train acc', acc.eval(feed_dict={x: x_[n_iter:n_iter + batch_size], y: y_}))
+            print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) ,'i', i, 'train acc total', acc.eval(feed_dict={x: x_, y: y_total}))
             saver.save(sess, save_path='train_splited_data_inverse_time_decay_save_sess/')
 
         #发送邮件
         if (i % 499 == 0):
             msg=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) +'\t'+'i'+'\t'+str(i)+'\t'+ 'train acc'+'\t'+ str(acc.eval(feed_dict={x: x_[n_iter:n_iter + batch_size], y: y_}))
-            send_mail.send_mail(msg)
+            msg_total=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) +'\t'+'i'+'\t'+str(i)+'\t'+ 'train acc total'+'\t'+ str(acc.eval(feed_dict={x: x_, y: y_total}))
+            send_msg=msg+'\n'+msg_total
+            send_mail.send_mail(send_msg)
         n_iter = n_iter + batch_size
