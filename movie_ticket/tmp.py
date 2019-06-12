@@ -11,9 +11,9 @@ def save_x():
     x=np.mat(np.zeros(shape=(2)))
     for line in fline_list:
         line_splited=line.split('\n')[0].split('\t')
+        if(line_splited==['']):break
         mat_line_splited=np.mat(line_splited)
         x=np.vstack((x,mat_line_splited))
-
     print(x.shape)
 
     x_tmp=x[1:,]
@@ -26,6 +26,7 @@ def save_y():
     y=np.mat(np.zeros(shape=(1)))
     for line in fline_list:
         line_splited=line.split('\n')[0].split('\t')
+        if(line_splited==['']):break
         mat_line_splited=np.mat(line_splited)
         y=np.vstack((y,mat_line_splited))
     print(y.shape)
@@ -46,4 +47,5 @@ def read_data(fname):
 
 
 if __name__=='__main__':
-    save_y_onehot()
+    y_ = read_data('y.npy')
+    print(y_)
