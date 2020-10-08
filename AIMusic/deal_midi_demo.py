@@ -32,7 +32,7 @@ def parse_event(evt, param):
     elif 192 <= evt <= 207:
         print('Program Change.')
 
-fpath='baga01.mid'
+fpath='jsbach/BWV532.mid'
 with open(fpath, 'rb') as f:
     # print(f.read(200))
     # print(f.read(4))
