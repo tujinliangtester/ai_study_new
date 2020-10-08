@@ -18,6 +18,7 @@ path = 'C:/Users/Administrator\Downloads\Deeplearning-master/mnist.npz'
 x_train = x_train / 255.0
 x_test = x_test / 255.0
 
+# 数据增强
 image_train = ImageDataGenerator(
     rotation_range=45,
     zoom_range=0.5,
