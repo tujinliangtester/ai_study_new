@@ -5,6 +5,7 @@ import os
 
 from keras_preprocessing.image import ImageDataGenerator
 from matplotlib import pyplot as plt
+from tensorflow.keras.utils import to_categorical
 
 def my_load_data(path):
     with np.load(path, allow_pickle=True) as f:
@@ -12,12 +13,38 @@ def my_load_data(path):
         x_test, y_test = f['x_test'], f['y_test']
         return (x_train, y_train), (x_test, y_test)
 
+def unpickle(file):
+    import pickle
+    with open(file, 'rb') as fo:
+        dict = pickle.load(fo, encoding='bytes')
+    return dict
+
 # 准备数据集
-mnist = tf.keras.datasets.mnist
-path='C:/Users/Administrator\Downloads\Deeplearning-master/mnist.npz'
-(x_train, y_train), (x_test, y_test) = my_load_data(path)
-x_train = x_train / 255.0
-x_test = x_test / 255.0
+path='D:/学习笔记/ai_data_set/cifar-10-python/cifar-10-batches-py/data_batch_'
+i=1
+x_train, y_train=[],[]
+while(i<6):
+    newpath=path+str(i)
+    f=unpickle(newpath)
+    x_train.append(f[b'data'])
+    y_train.append(f[b'labels'])
+    i+=1
+
+x_train=tf.cast(x_train,tf.float32)
+x_train=np.array(x_train).reshape((-1,32,32,3))
+y_train=np.array(y_train).reshape(-1)
+# one hot编码
+# y_train=to_categorical(np.array(y_train))
+
+path='D:/学习笔记/ai_data_set/cifar-10-python/cifar-10-batches-py/test_batch'
+f=unpickle(path)
+x_test, y_test=f[b'data'],f[b'labels']
+
+x_test=tf.cast(x_test,tf.float32)
+x_test=np.array(x_test).reshape((x_test.shape[0],32,32,3))
+y_test=np.array(y_test)
+# y_test=to_categorical(np.array(y_test))
+
 
 # 数据增强
 image_train = ImageDataGenerator(
@@ -25,23 +52,22 @@ image_train = ImageDataGenerator(
     zoom_range=0.5,
     rescale=1
 )
-x_train = x_train.reshape(x_train.shape[0], x_train.shape[1], x_train.shape[2], 1)
-image_train.fit(x_train)
-x_train,x_test=x_train.reshape(x_train.shape[0], x_train.shape[1], x_train.shape[2], 1),\
-               x_test.reshape(x_test.shape[0], x_test.shape[1], x_test.shape[2], 1)
+# x_train = x_train.reshape(x_train.shape[0], x_train.shape[1], x_train.shape[2], 1)
+# image_train.fit(x_train)
 
 # 搭建网络
 model = tf.keras.models.Sequential([
-    tf.keras.layers.Conv2D(3,(3,3)),
+    tf.keras.layers.Conv2D(6,(5,5)),
+    tf.keras.layers.Conv2D(6,(5,5)),
     tf.keras.layers.BatchNormalization(),
     tf.keras.layers.Activation('relu'),
     tf.keras.layers.MaxPool2D((2,2),2),
-    # tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Dropout(0.2),
     tf.keras.layers.Flatten(),
     tf.keras.layers.Dense(128, 'relu'),
     tf.keras.layers.Dense(10, 'softmax'),
 ])
-
+var = tf.keras.optimizers.Adam
 # 定义网络
 model.compile(optimizer='adam',
               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
@@ -49,9 +75,9 @@ model.compile(optimizer='adam',
 
 # 断点续训
 check_point_path='./check_point/mnist.ckpt'
-if os.path.exists(check_point_path+'.index'):
-    print('加载已有模型参数，继续训练')
-    model.load_weights(check_point_path)
+# if os.path.exists(check_point_path+'.index'):
+#     print('加载已有模型参数，继续训练')
+#     model.load_weights(check_point_path)
 
 call_back=tf.keras.callbacks.ModelCheckpoint(
     filepath=check_point_path,
@@ -61,7 +87,8 @@ call_back=tf.keras.callbacks.ModelCheckpoint(
 
 # 训练网络
 history=model.fit(
-    image_train.flow(x_train, y_train, batch_size=32), epochs=5,
+    # image_train.flow(x_train, y_train, batch_size=32), epochs=5,
+    x_train, y_train, batch_size=32, epochs=15,
     validation_data=(x_test, y_test), validation_steps=1,
     callbacks=call_back
 )
