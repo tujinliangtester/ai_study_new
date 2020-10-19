@@ -20,7 +20,7 @@ def unpickle(file):
     return dict
 
 # 准备数据集
-path='D:/学习笔记/ai_data_set/cifar-10-python/cifar-10-batches-py/data_batch_'
+path='D:\BaiduNetdiskDownload\cifar-10-python\cifar-10-batches-py/data_batch_'
 i=1
 x_train, y_train=[],[]
 while(i<6):
@@ -36,7 +36,7 @@ y_train=np.array(y_train).reshape(-1)
 # one hot编码
 # y_train=to_categorical(np.array(y_train))
 
-path='D:/学习笔记/ai_data_set/cifar-10-python/cifar-10-batches-py/test_batch'
+path='D:\BaiduNetdiskDownload\cifar-10-python\cifar-10-batches-py/test_batch'
 f=unpickle(path)
 x_test, y_test=f[b'data'],f[b'labels']
 
@@ -56,18 +56,40 @@ image_train = ImageDataGenerator(
 # image_train.fit(x_train)
 
 # 搭建网络
+# model = tf.keras.models.Sequential([
+#     tf.keras.layers.Conv2D(filters=6,kernel_size=(5,5),padding='same'),
+#     tf.keras.layers.BatchNormalization(),
+#     tf.keras.layers.Activation('relu'),
+#     tf.keras.layers.Conv2D(filters=6, kernel_size=(5, 5), padding='same'),
+#     tf.keras.layers.BatchNormalization(),
+#     tf.keras.layers.Activation('relu'),
+#     tf.keras.layers.MaxPool2D((2, 2), 2),
+#     tf.keras.layers.Dropout(0.2),
+#     tf.keras.layers.Flatten(),
+#     tf.keras.layers.Dense(128, 'relu'),
+#     tf.keras.layers.Dense(10, 'softmax'),
+# ])
+
 model = tf.keras.models.Sequential([
-    tf.keras.layers.Conv2D(6,(5,5)),
-    tf.keras.layers.Conv2D(6,(5,5)),
+    tf.keras.layers.Conv2D(filters=1,kernel_size=(5,5)),
     tf.keras.layers.BatchNormalization(),
     tf.keras.layers.Activation('relu'),
-    tf.keras.layers.MaxPool2D((2,2),2),
-    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Conv2D(filters=1, kernel_size=(4, 4)),
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.Activation('relu'),
+    tf.keras.layers.Conv2D(filters=1, kernel_size=(3, 3)),
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.Activation('relu'),
+    tf.keras.layers.Conv2D(filters=1, kernel_size=(2, 2)),
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.Activation('relu'),
+    # tf.keras.layers.MaxPool2D((2, 2), 2),
+    # tf.keras.layers.Dropout(0.2),
     tf.keras.layers.Flatten(),
     tf.keras.layers.Dense(128, 'relu'),
     tf.keras.layers.Dense(10, 'softmax'),
 ])
-var = tf.keras.optimizers.Adam
+
 # 定义网络
 model.compile(optimizer='adam',
               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
@@ -75,9 +97,9 @@ model.compile(optimizer='adam',
 
 # 断点续训
 check_point_path='./check_point/mnist.ckpt'
-# if os.path.exists(check_point_path+'.index'):
-#     print('加载已有模型参数，继续训练')
-#     model.load_weights(check_point_path)
+if os.path.exists(check_point_path+'.index'):
+    print('加载已有模型参数，继续训练')
+    model.load_weights(check_point_path)
 
 call_back=tf.keras.callbacks.ModelCheckpoint(
     filepath=check_point_path,
@@ -88,7 +110,7 @@ call_back=tf.keras.callbacks.ModelCheckpoint(
 # 训练网络
 history=model.fit(
     # image_train.flow(x_train, y_train, batch_size=32), epochs=5,
-    x_train, y_train, batch_size=32, epochs=15,
+    x_train, y_train, batch_size=64, epochs=20,
     validation_data=(x_test, y_test), validation_steps=1,
     callbacks=call_back
 )
