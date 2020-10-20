@@ -26,12 +26,16 @@ x_train, y_train=[],[]
 while(i<6):
     newpath=path+str(i)
     f=unpickle(newpath)
-    x_train.append(f[b'data'])
-    y_train.append(f[b'labels'])
+    if(i==1):
+        x_train = f[b'data']
+        y_train =f[b'labels']
+    else:
+        x_train=tf.concat([x_train,f[b'data']],axis=0)
+        y_train=tf.concat([y_train,f[b'labels']],axis=0)
     i+=1
 
 x_train=tf.cast(x_train,tf.float32)
-x_train=np.array(x_train).reshape((-1,32,32,3))
+x_train=np.array(x_train).reshape((-1,3,32,32))
 y_train=np.array(y_train).reshape(-1)
 # one hot编码
 # y_train=to_categorical(np.array(y_train))
@@ -41,9 +45,12 @@ f=unpickle(path)
 x_test, y_test=f[b'data'],f[b'labels']
 
 x_test=tf.cast(x_test,tf.float32)
-x_test=np.array(x_test).reshape((x_test.shape[0],32,32,3))
+x_test=np.array(x_test).reshape((x_test.shape[0],3,32,32))
 y_test=np.array(y_test)
 # y_test=to_categorical(np.array(y_test))
+
+# 官方数据集
+# tf.keras.datasets.cifar10.load_data()
 
 
 # 数据增强
@@ -57,8 +64,10 @@ image_train = ImageDataGenerator(
 
 # 搭建网络
 model = tf.keras.models.Sequential([
-    tf.keras.layers.Conv2D(6,(5,5)),
-    tf.keras.layers.Conv2D(6,(5,5)),
+    tf.keras.layers.Conv2D(filters=6,kernel_size=(5,5),padding='same'),
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.Activation('relu'),
+    tf.keras.layers.Conv2D(filters=6, kernel_size=(5, 5), padding='same'),
     tf.keras.layers.BatchNormalization(),
     tf.keras.layers.Activation('relu'),
     tf.keras.layers.MaxPool2D((2,2),2),
@@ -88,7 +97,7 @@ call_back=tf.keras.callbacks.ModelCheckpoint(
 # 训练网络
 history=model.fit(
     # image_train.flow(x_train, y_train, batch_size=32), epochs=5,
-    x_train, y_train, batch_size=32, epochs=15,
+    x_train, y_train, batch_size=32, epochs=50,
     validation_data=(x_test, y_test), validation_steps=1,
     callbacks=call_back
 )
