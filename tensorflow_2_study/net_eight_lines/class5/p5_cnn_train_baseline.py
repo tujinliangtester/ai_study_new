@@ -63,20 +63,40 @@ image_train = ImageDataGenerator(
 # image_train.fit(x_train)
 
 # 搭建网络
+# model = tf.keras.models.Sequential([
+#     tf.keras.layers.Conv2D(filters=6,kernel_size=(5,5),padding='same'),
+#     tf.keras.layers.BatchNormalization(),
+#     tf.keras.layers.Activation('relu'),
+#     tf.keras.layers.Conv2D(filters=6, kernel_size=(5, 5), padding='same'),
+#     tf.keras.layers.BatchNormalization(),
+#     tf.keras.layers.Activation('relu'),
+#     tf.keras.layers.MaxPool2D((2, 2), 2),
+#     tf.keras.layers.Dropout(0.2),
+#     tf.keras.layers.Flatten(),
+#     tf.keras.layers.Dense(128, 'relu'),
+#     tf.keras.layers.Dense(10, 'softmax'),
+# ])
+
 model = tf.keras.models.Sequential([
-    tf.keras.layers.Conv2D(filters=6,kernel_size=(5,5),padding='same'),
+    tf.keras.layers.Conv2D(filters=1,kernel_size=(5,5)),
     tf.keras.layers.BatchNormalization(),
     tf.keras.layers.Activation('relu'),
-    tf.keras.layers.Conv2D(filters=6, kernel_size=(5, 5), padding='same'),
+    tf.keras.layers.Conv2D(filters=1, kernel_size=(4, 4)),
     tf.keras.layers.BatchNormalization(),
     tf.keras.layers.Activation('relu'),
-    tf.keras.layers.MaxPool2D((2,2),2),
-    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Conv2D(filters=1, kernel_size=(3, 3)),
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.Activation('relu'),
+    tf.keras.layers.Conv2D(filters=1, kernel_size=(2, 2)),
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.Activation('relu'),
+    # tf.keras.layers.MaxPool2D((2, 2), 2),
+    # tf.keras.layers.Dropout(0.2),
     tf.keras.layers.Flatten(),
     tf.keras.layers.Dense(128, 'relu'),
     tf.keras.layers.Dense(10, 'softmax'),
 ])
-var = tf.keras.optimizers.Adam
+
 # 定义网络
 model.compile(optimizer='adam',
               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
