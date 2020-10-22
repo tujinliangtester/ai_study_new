@@ -67,39 +67,19 @@ image_train = ImageDataGenerator(
 # image_train.fit(x_train)
 
 # 搭建网络
-# model = tf.keras.models.Sequential([
-#     tf.keras.layers.Conv2D(filters=6,kernel_size=(5,5),padding='same'),
-#     tf.keras.layers.BatchNormalization(),
-#     tf.keras.layers.Activation('relu'),
-#     tf.keras.layers.Conv2D(filters=6, kernel_size=(5, 5), padding='same'),
-#     tf.keras.layers.BatchNormalization(),
-#     tf.keras.layers.Activation('relu'),
-#     tf.keras.layers.MaxPool2D((2, 2), 2),
-#     tf.keras.layers.Dropout(0.2),
-#     tf.keras.layers.Flatten(),
-#     tf.keras.layers.Dense(128, 'relu'),
-#     tf.keras.layers.Dense(10, 'softmax'),
-# ])
-
 model = tf.keras.models.Sequential([
-    tf.keras.layers.Conv2D(filters=1,kernel_size=(5,5)),
-    tf.keras.layers.BatchNormalization(),
-    tf.keras.layers.Activation('relu'),
-    tf.keras.layers.Conv2D(filters=1, kernel_size=(4, 4)),
-    tf.keras.layers.BatchNormalization(),
-    tf.keras.layers.Activation('relu'),
-    tf.keras.layers.Conv2D(filters=1, kernel_size=(3, 3)),
-    tf.keras.layers.BatchNormalization(),
-    tf.keras.layers.Activation('relu'),
-    tf.keras.layers.Conv2D(filters=1, kernel_size=(2, 2)),
-    tf.keras.layers.BatchNormalization(),
-    tf.keras.layers.Activation('relu'),
-    # tf.keras.layers.MaxPool2D((2, 2), 2),
-    # tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Conv2D(filters=6,kernel_size=(5,5)),
+    tf.keras.layers.Activation('sigmoid'),
+    tf.keras.layers.MaxPool2D((2, 2), 2),
+
+    tf.keras.layers.Conv2D(filters=16,kernel_size=(5,5)),
+    tf.keras.layers.Activation('sigmoid'),
+    tf.keras.layers.MaxPool2D((2, 2), 2),
+
     tf.keras.layers.Flatten(),
-    tf.keras.layers.Dense(128, 'relu'),
-    tf.keras.layers.Dense(128, 'relu'),
-    tf.keras.layers.Dense(10, 'softmax'),
+    tf.keras.layers.Dense(units=120, activation='sigmoid'),
+    tf.keras.layers.Dense(units=84, activation='sigmoid'),
+    tf.keras.layers.Dense(units=10, activation='softmax'),
 ])
 
 # 定义网络
@@ -109,9 +89,9 @@ model.compile(optimizer='adam',
 
 # 断点续训
 check_point_path='./check_point/mnist.ckpt'
-# if os.path.exists(check_point_path+'.index'):
-#     print('加载已有模型参数，继续训练')
-#     model.load_weights(check_point_path)
+if os.path.exists(check_point_path+'.index'):
+    print('加载已有模型参数，继续训练')
+    model.load_weights(check_point_path)
 
 call_back=tf.keras.callbacks.ModelCheckpoint(
     filepath=check_point_path,

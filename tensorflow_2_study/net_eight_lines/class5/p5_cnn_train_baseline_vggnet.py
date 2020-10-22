@@ -67,38 +67,76 @@ image_train = ImageDataGenerator(
 # image_train.fit(x_train)
 
 # 搭建网络
-# model = tf.keras.models.Sequential([
-#     tf.keras.layers.Conv2D(filters=6,kernel_size=(5,5),padding='same'),
-#     tf.keras.layers.BatchNormalization(),
-#     tf.keras.layers.Activation('relu'),
-#     tf.keras.layers.Conv2D(filters=6, kernel_size=(5, 5), padding='same'),
-#     tf.keras.layers.BatchNormalization(),
-#     tf.keras.layers.Activation('relu'),
-#     tf.keras.layers.MaxPool2D((2, 2), 2),
-#     tf.keras.layers.Dropout(0.2),
-#     tf.keras.layers.Flatten(),
-#     tf.keras.layers.Dense(128, 'relu'),
-#     tf.keras.layers.Dense(10, 'softmax'),
-# ])
-
 model = tf.keras.models.Sequential([
-    tf.keras.layers.Conv2D(filters=1,kernel_size=(5,5)),
+    tf.keras.layers.Conv2D(filters=64,kernel_size=(3,3),strides=1,padding='same'),
     tf.keras.layers.BatchNormalization(),
     tf.keras.layers.Activation('relu'),
-    tf.keras.layers.Conv2D(filters=1, kernel_size=(4, 4)),
+
+    tf.keras.layers.Conv2D(filters=64,kernel_size=(3,3),strides=1,padding='same'),
     tf.keras.layers.BatchNormalization(),
     tf.keras.layers.Activation('relu'),
-    tf.keras.layers.Conv2D(filters=1, kernel_size=(3, 3)),
+    tf.keras.layers.MaxPool2D(pool_size=(2,2),strides=2),
+    tf.keras.layers.Dropout(0.2),
+
+    tf.keras.layers.Conv2D(filters=128, kernel_size=(3, 3), strides=1, padding='same'),
     tf.keras.layers.BatchNormalization(),
     tf.keras.layers.Activation('relu'),
-    tf.keras.layers.Conv2D(filters=1, kernel_size=(2, 2)),
+
+    tf.keras.layers.Conv2D(filters=128, kernel_size=(3, 3), strides=1, padding='same'),
     tf.keras.layers.BatchNormalization(),
     tf.keras.layers.Activation('relu'),
-    # tf.keras.layers.MaxPool2D((2, 2), 2),
-    # tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.MaxPool2D(pool_size=(2, 2), strides=2),
+    tf.keras.layers.Dropout(0.2),
+
+    tf.keras.layers.Conv2D(filters=256, kernel_size=(3, 3), strides=1, padding='same'),
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.Activation('relu'),
+
+    tf.keras.layers.Conv2D(filters=256, kernel_size=(3, 3), strides=1, padding='same'),
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.Activation('relu'),
+
+    tf.keras.layers.Conv2D(filters=256, kernel_size=(3, 3), strides=1, padding='same'),
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.Activation('relu'),
+    tf.keras.layers.MaxPool2D(pool_size=(2, 2), strides=2),
+    tf.keras.layers.Dropout(0.2),
+
+    tf.keras.layers.Conv2D(filters=512, kernel_size=(3, 3), strides=1, padding='same'),
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.Activation('relu'),
+
+    tf.keras.layers.Conv2D(filters=512, kernel_size=(3, 3), strides=1, padding='same'),
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.Activation('relu'),
+
+    tf.keras.layers.Conv2D(filters=512, kernel_size=(3, 3), strides=1, padding='same'),
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.Activation('relu'),
+    tf.keras.layers.MaxPool2D(pool_size=(2, 2), strides=2),
+    tf.keras.layers.Dropout(0.2),
+
+    tf.keras.layers.Conv2D(filters=512, kernel_size=(3, 3), strides=1, padding='same'),
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.Activation('relu'),
+
+    tf.keras.layers.Conv2D(filters=512, kernel_size=(3, 3), strides=1, padding='same'),
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.Activation('relu'),
+
+    tf.keras.layers.Conv2D(filters=512, kernel_size=(3, 3), strides=1, padding='same'),
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.Activation('relu'),
+    tf.keras.layers.MaxPool2D(pool_size=(2, 2), strides=2),
+    tf.keras.layers.Dropout(0.2),
+
     tf.keras.layers.Flatten(),
-    tf.keras.layers.Dense(128, 'relu'),
-    tf.keras.layers.Dense(128, 'relu'),
+    tf.keras.layers.Dense(512, 'relu'),
+    tf.keras.layers.Dropout(0.2),
+
+    tf.keras.layers.Dense(512, 'relu'),
+    tf.keras.layers.Dropout(0.2),
+
     tf.keras.layers.Dense(10, 'softmax'),
 ])
 
@@ -122,7 +160,7 @@ call_back=tf.keras.callbacks.ModelCheckpoint(
 # 训练网络
 history=model.fit(
     # image_train.flow(x_train, y_train, batch_size=32), epochs=5,
-    x_train, y_train, batch_size=128, epochs=20,
+    x_train, y_train, batch_size=256, epochs=5,
     validation_data=(x_test, y_test), validation_steps=1,
     callbacks=call_back
 )
