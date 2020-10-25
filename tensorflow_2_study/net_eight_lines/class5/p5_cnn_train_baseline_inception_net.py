@@ -87,12 +87,12 @@ class InceptionNet(Model):
         super(InceptionNet,self).__init__(*args, **kwargs)
         self.c1=ConvBnRelu(16,(1,1),strides)
         self.c2_1=ConvBnRelu(16,(1,1),strides)
-        self.c2_2=ConvBnRelu(16,(3,3),strides)
+        self.c2_2=ConvBnRelu(16,(3,3),1)
         self.c3_1=ConvBnRelu(16,(1,1),strides)
-        self.c3_2=ConvBnRelu(16,(5,5),strides)
+        self.c3_2=ConvBnRelu(16,(5,5),1)
         self.c4_1=tf.keras.models.Sequential([
             tf.keras.layers.MaxPool2D((3, 3), 1,'same')])
-        self.c4_2=ConvBnRelu(16,(1,1),strides)
+        self.c4_2=ConvBnRelu(16,(1,1),1)
     def call(self,x):
         x1=self.c1(x)
         x2_1=self.c2_1(x)
@@ -113,17 +113,24 @@ class Inception10(Model):
         for i in range(inceptionBlocks):
             for j in range(2):
                 if(j==0):
-                    block=InceptionNet(strides=2)
+                    # block=InceptionNet(strides=2)
+                    block=InceptionNet(strides=1)
                 else:
                     block=InceptionNet(strides=1)
                 self.inceptionBlock.add(block)
-        self.d=Dense(denses,'softmax')
+        self.d=Dense(256,'relu')
+        self.d2 = Dense(256, 'relu')
+        self.d3 = Dense(denses, 'softmax')
+    #     todo 从结果来看，似乎过拟合严重，将dens的节点增加并加dropout尝试
+
     def call(self,x):
         x1=self.c1(x)
         x2=self.inceptionBlock(x1)
-        x_f=tf.keras.layers.Flatten(x2)
+        x_f=tf.keras.layers.Flatten()(x2)
         x3=self.d(x_f)
-        return x3
+        x4 = self.d2(x3)
+        x5 = self.d3(x4)
+        return x5
 
 model=Inception10(16,2,10)
 
@@ -147,7 +154,7 @@ call_back=tf.keras.callbacks.ModelCheckpoint(
 # 训练网络
 history=model.fit(
     # image_train.flow(x_train, y_train, batch_size=32), epochs=5,
-    x_train, y_train, batch_size=128, epochs=5,
+    x_train, y_train, batch_size=128, epochs=30,
     validation_data=(x_test, y_test), validation_steps=1,
     callbacks=call_back
 )
