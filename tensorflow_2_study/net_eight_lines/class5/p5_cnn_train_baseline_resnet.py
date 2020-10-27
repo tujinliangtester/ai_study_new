@@ -7,7 +7,8 @@ from keras_preprocessing.image import ImageDataGenerator
 from matplotlib import pyplot as plt
 from tensorflow.keras.utils import to_categorical
 from tensorflow.python.keras import Model
-from tensorflow.python.keras.layers import Dense, Dropout
+from tensorflow.python.keras.layers import BatchNormalization, Activation, Dense
+from tensorflow.python.keras.layers.convolutional import Conv, Conv2D
 
 
 def my_load_data(path):
@@ -69,73 +70,75 @@ image_train = ImageDataGenerator(
 # x_train = x_train.reshape(x_train.shape[0], x_train.shape[1], x_train.shape[2], 1)
 # image_train.fit(x_train)
 
-# 搭建网络
+class resBlock(Model):
+    def __init__(self, filters,kernel_size,strides,*args, **kwargs):
+        self.strides=strides
+        self.bo=False
+        super().__init__(*args, **kwargs)
+        self.c1=Conv2D(filters=filters,kernel_size=kernel_size,strides=strides,padding='same')
+        self.b1=BatchNormalization()
+        self.a1=Activation('relu')
 
-class ConvBnRelu(Model):
-    def __init__(self,ch,kernal_size,strides=1,padding='same'):
-        super(ConvBnRelu, self).__init__()
-        self.model=tf.keras.models.Sequential([
-            tf.keras.layers.Conv2D(ch,kernal_size,strides,padding),
-            tf.keras.layers.BatchNormalization(),
-            tf.keras.layers.Activation('relu'),
-        ])
-    def call(self,x):
-        return self.model(x)
+        self.c2=Conv2D(filters=filters,kernel_size=kernel_size,strides=1,padding='same')
+        self.b2=BatchNormalization()
+        self.a2=Activation('relu')
+        if(strides>1):
+            self.bo=True
+            #    注意，这里layer只能在init函数中创建，否则tf会无法创建变量
+            self.c_down=Conv2D(filters=1,kernel_size=(1,1),strides=self.strides,padding='same')
+    def call(self,inputs):
+        x0=inputs
+        x1=self.c1(x0)
+        x1=self.b1(x1)
+        x1=self.a1(x1)
 
-class InceptionNet(Model):
-    def __init__(self, strides, *args, **kwargs):
-        super(InceptionNet,self).__init__(*args, **kwargs)
-        self.c1=ConvBnRelu(16,(1,1),strides)
-        self.c2_1=ConvBnRelu(16,(1,1),strides)
-        self.c2_2=ConvBnRelu(16,(3,3),1)
-        self.c3_1=ConvBnRelu(16,(1,1),strides)
-        self.c3_2=ConvBnRelu(16,(5,5),1)
-        self.c4_1=tf.keras.models.Sequential([
-            tf.keras.layers.MaxPool2D((3, 3), 1,'same')])
-        self.c4_2=ConvBnRelu(16,(1,1),1)
+        x2=self.c2(x1)
+        x2=self.b2(x2)
+        if(self.bo):
+            x0=self.c_down(x0)
+        y=x2+x0
+        return self.a2(y)
+
+class resNet18(Model):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.c1=Conv2D(filters=64,kernel_size=(3,3),strides=1,padding='same')
+        self.b1=BatchNormalization()
+        self.a1=Activation('relu')
+        self.resNetBlock=tf.keras.models.Sequential()
+        for i in range(2):
+            resB=resBlock(filters=64,kernel_size=(3,3),strides=1)
+            self.resNetBlock.add(resB)
+        resB = resBlock(filters=128, kernel_size=(3, 3), strides=2)
+        self.resNetBlock.add(resB)
+
+        resB = resBlock(filters=128, kernel_size=(3, 3), strides=1)
+        self.resNetBlock.add(resB)
+
+        resB = resBlock(filters=256, kernel_size=(3, 3), strides=2)
+        self.resNetBlock.add(resB)
+
+        resB = resBlock(filters=256, kernel_size=(3, 3), strides=1)
+        self.resNetBlock.add(resB)
+
+        resB = resBlock(filters=512, kernel_size=(3, 3), strides=2)
+        self.resNetBlock.add(resB)
+
+        resB = resBlock(filters=512, kernel_size=(3, 3), strides=1)
+        self.resNetBlock.add(resB)
+
+        self.p=tf.keras.layers.GlobalAveragePooling2D()
+        self.dens=Dense(units=10,activation='softmax')
     def call(self,x):
-        x1=self.c1(x)
-        x2_1=self.c2_1(x)
-        x2_2=self.c2_2(x2_1)
-        x3_1=self.c3_1(x)
-        x3_2=self.c3_2(x3_1)
-        x4_1=self.c4_1(x)
-        x4_2=self.c4_2(x4_1)
-        # 在深度方向叠加，NWHC，即3为深度方向
-        x=tf.concat([x1,x2_2,x3_2,x4_2],axis=3)
+        x=self.c1(x)
+        x=self.b1(x)
+        x=self.a1(x)
+        x=self.resNetBlock(x)
+        x=self.p(x)
+        x=self.dens(x)
         return x
 
-class Inception10(Model):
-    def __init__(self, initCnns,inceptionBlocks,denses):
-        super(Inception10,self).__init__()
-        self.c1=ConvBnRelu(16,(3,3))
-        self.inceptionBlock=tf.keras.models.Sequential()
-        for i in range(inceptionBlocks):
-            for j in range(2):
-                if(j==0):
-                    # block=InceptionNet(strides=2)
-                    block=InceptionNet(strides=1)
-                else:
-                    block=InceptionNet(strides=1)
-                self.inceptionBlock.add(block)
-        self.d=Dense(512,'relu')
-        self.dr1=Dropout(0.5)
-        self.d2 = Dense(512, 'relu')
-        self.dr2=Dropout(0.5)
-        self.d3 = Dense(denses, 'softmax')
-
-    def call(self,x):
-        x1=self.c1(x)
-        x2=self.inceptionBlock(x1)
-        x_f=tf.keras.layers.Flatten()(x2)
-        x3=self.d(x_f)
-        x3_dr=self.dr1(x3)
-        x4 = self.d2(x3_dr)
-        x4_dr=self.dr2(x4)
-        x5 = self.d3(x4_dr)
-        return x5
-
-model=Inception10(16,2,10)
+model = resNet18()
 
 # 定义网络
 model.compile(optimizer='adam',
@@ -144,9 +147,9 @@ model.compile(optimizer='adam',
 
 # 断点续训
 check_point_path='./check_point/mnist.ckpt'
-if os.path.exists(check_point_path+'.index'):
-    print('加载已有模型参数，继续训练')
-    model.load_weights(check_point_path)
+# if os.path.exists(check_point_path+'.index'):
+#     print('加载已有模型参数，继续训练')
+#     model.load_weights(check_point_path)
 
 call_back=tf.keras.callbacks.ModelCheckpoint(
     filepath=check_point_path,
@@ -157,7 +160,7 @@ call_back=tf.keras.callbacks.ModelCheckpoint(
 # 训练网络
 history=model.fit(
     # image_train.flow(x_train, y_train, batch_size=32), epochs=5,
-    x_train, y_train, batch_size=128, epochs=15,
+    x_train, y_train, batch_size=256, epochs=10,
     validation_data=(x_test, y_test), validation_steps=1,
     callbacks=call_back
 )
