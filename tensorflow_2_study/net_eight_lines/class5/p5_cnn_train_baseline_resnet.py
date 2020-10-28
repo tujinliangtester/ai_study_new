@@ -147,9 +147,9 @@ model.compile(optimizer='adam',
 
 # 断点续训
 check_point_path='./check_point/mnist.ckpt'
-# if os.path.exists(check_point_path+'.index'):
-#     print('加载已有模型参数，继续训练')
-#     model.load_weights(check_point_path)
+if os.path.exists(check_point_path+'.index'):
+    print('加载已有模型参数，继续训练')
+    model.load_weights(check_point_path)
 
 call_back=tf.keras.callbacks.ModelCheckpoint(
     filepath=check_point_path,
