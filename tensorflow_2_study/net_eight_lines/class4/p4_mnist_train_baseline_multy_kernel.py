@@ -2,6 +2,7 @@
 import tensorflow as tf
 import numpy as np
 from matplotlib import pyplot as plt
+from tensorflow.python.keras import Model
 
 
 def my_load_data(path):
@@ -58,15 +59,32 @@ class Mul_dimen_layer(tf.keras.layers.Layer):
         y=x9+x10+x11
         return self.a(y)
 
+class my_model(Model):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.f=    tf.keras.layers.Flatten()
+        self.d1=    tf.keras.layers.Dense(128, 'relu')
+        self.d2=    tf.keras.layers.Dense(32, 'relu')
+        self.mut=    Mul_dimen_layer()
+        self.d3=    tf.keras.layers.Dense(10, 'softmax')
+    def call(self,inputs):
+        x=self.f(inputs)
+        x=self.d1(x)
+        x=self.d2(x)
+        x=self.mut(x)
+        x=self.d3(x)
+        return x
+
 
 # 搭建网络
-model = tf.keras.models.Sequential([
-    tf.keras.layers.Flatten(),
-    tf.keras.layers.Dense(128, 'relu'),
-    tf.keras.layers.Dense(32, 'relu'),
-    Mul_dimen_layer(),
-    tf.keras.layers.Dense(10, 'softmax'),
-])
+# model = tf.keras.models.Sequential([
+#     tf.keras.layers.Flatten(),
+#     tf.keras.layers.Dense(128, 'relu'),
+#     tf.keras.layers.Dense(32, 'relu'),
+#     Mul_dimen_layer(),
+#     tf.keras.layers.Dense(10, 'softmax'),
+# ])
+model=my_model()
 
 # 定义网络
 model.compile(optimizer='adam',

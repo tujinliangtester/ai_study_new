@@ -129,6 +129,7 @@ class resNet18(Model):
 
         self.p=tf.keras.layers.GlobalAveragePooling2D()
         self.dens_mut=Dense(units=32,activation='relu')
+        #todo 报错了，暂时还没找到原因
         self.mut_kernel=Mul_dimen_layer()
         self.dens=Dense(units=10,activation='softmax')
     def call(self,x):
