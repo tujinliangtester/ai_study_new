@@ -127,19 +127,22 @@ class resNet18(Model):
         resB = resBlock(filters=512, kernel_size=(3, 3), strides=1)
         self.resNetBlock.add(resB)
 
-        self.p=tf.keras.layers.GlobalAveragePooling2D()
+        self.flatten=tf.keras.layers.Flatten()
+
         self.dens_mut=Dense(units=32,activation='relu')
         #todo 报错了，暂时还没找到原因
         self.mut_kernel=Mul_dimen_layer()
+        # self.p=tf.keras.layers.GlobalAveragePooling2D()
         self.dens=Dense(units=10,activation='softmax')
     def call(self,x):
         x=self.c1(x)
         x=self.b1(x)
         x=self.a1(x)
         x=self.resNetBlock(x)
-        x=self.p(x)
+        x=self.flatten(x)
         x=self.dens_mut(x)
         x=self.mut_kernel(x)
+        # x=self.p(x)
         x=self.dens(x)
         return x
 
@@ -165,9 +168,10 @@ call_back=tf.keras.callbacks.ModelCheckpoint(
 # 训练网络
 history=model.fit(
     # image_train.flow(x_train, y_train, batch_size=32), epochs=5,
+    # x_train[:300,:,:,:], y_train[:300], batch_size=256, epochs=1, #初步运行，试错
     x_train, y_train, batch_size=256, epochs=15,
     validation_data=(x_test, y_test), validation_steps=1,
-    callbacks=call_back
+    # callbacks=call_back
 )
 
 # 打印网络
