@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-
+#todo 确实没有什么用，与自己之前想象的有些不一样呢？需要仔细查找哪些地方不一样，再进行变化
 class Mul_dimen_layer(tf.keras.layers.Layer):
     def __init__(self, units=32):
         super(Mul_dimen_layer, self).__init__()
