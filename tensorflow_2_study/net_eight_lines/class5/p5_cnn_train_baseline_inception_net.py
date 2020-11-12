@@ -119,9 +119,9 @@ class Inception10(Model):
                     block=InceptionNet(strides=1)
                 self.inceptionBlock.add(block)
         self.d=Dense(512,'relu')
-        self.dr1=Dropout(0.5)
-        self.d2 = Dense(512, 'relu')
-        self.dr2=Dropout(0.5)
+        # self.dr1=Dropout(0.5)
+        # self.d2 = Dense(512, 'relu')
+        # self.dr2=Dropout(0.5)
         self.d3 = Dense(denses, 'softmax')
 
     def call(self,x):
@@ -129,10 +129,10 @@ class Inception10(Model):
         x2=self.inceptionBlock(x1)
         x_f=tf.keras.layers.Flatten()(x2)
         x3=self.d(x_f)
-        x3_dr=self.dr1(x3)
-        x4 = self.d2(x3_dr)
-        x4_dr=self.dr2(x4)
-        x5 = self.d3(x4_dr)
+        # x3_dr=self.dr1(x3)
+        # x4 = self.d2(x3_dr)
+        # x4_dr=self.dr2(x4)
+        x5 = self.d3(x3)
         return x5
 
 model=Inception10(16,2,10)
@@ -143,7 +143,7 @@ model.compile(optimizer='adam',
               metrics=['sparse_categorical_accuracy'])
 
 # 断点续训
-check_point_path='./check_point/mnist.ckpt'
+check_point_path='./check_point_inception/mnist.ckpt'
 if os.path.exists(check_point_path+'.index'):
     print('加载已有模型参数，继续训练')
     model.load_weights(check_point_path)
@@ -157,7 +157,7 @@ call_back=tf.keras.callbacks.ModelCheckpoint(
 # 训练网络
 history=model.fit(
     # image_train.flow(x_train, y_train, batch_size=32), epochs=5,
-    x_train, y_train, batch_size=128, epochs=15,
+    x_train, y_train, batch_size=256, epochs=5,
     validation_data=(x_test, y_test), validation_steps=1,
     callbacks=call_back
 )

@@ -146,7 +146,7 @@ model.compile(optimizer='adam',
               metrics=['sparse_categorical_accuracy'])
 
 # 断点续训
-check_point_path='./check_point/mnist.ckpt'
+check_point_path='./check_point_res/mnist.ckpt'
 if os.path.exists(check_point_path+'.index'):
     print('加载已有模型参数，继续训练')
     model.load_weights(check_point_path)
@@ -160,7 +160,7 @@ call_back=tf.keras.callbacks.ModelCheckpoint(
 # 训练网络
 history=model.fit(
     # image_train.flow(x_train, y_train, batch_size=32), epochs=5,
-    x_train, y_train, batch_size=256, epochs=10,
+    x_train, y_train, batch_size=256, epochs=5,
     validation_data=(x_test, y_test), validation_steps=1,
     callbacks=call_back
 )

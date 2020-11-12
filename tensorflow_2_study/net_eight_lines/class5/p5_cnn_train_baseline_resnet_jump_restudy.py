@@ -153,7 +153,7 @@ model.compile(optimizer='adam',
               metrics=['sparse_categorical_accuracy'])
 
 # 断点续训
-check_point_path='./check_point/mnist.ckpt'
+check_point_path='./check_point_res_jump_re/mnist.ckpt'
 if os.path.exists(check_point_path+'.index'):
     print('加载已有模型参数，继续训练')
     model.load_weights(check_point_path)
