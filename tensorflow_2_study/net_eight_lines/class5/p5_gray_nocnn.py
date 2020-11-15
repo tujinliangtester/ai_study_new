@@ -73,13 +73,44 @@ image_train = ImageDataGenerator(
 )
 # x_train = x_train.reshape(x_train.shape[0], x_train.shape[1], x_train.shape[2], 1)
 # image_train.fit(x_train)
+
+class jumpDenseBlock(Model):
+    def __init__(self,units,jump_step,*args, **kwargs):
+        self.jump_step=jump_step
+        super().__init__(*args, **kwargs)
+        self.d=tf.keras.layers.Dense(units=units,activation='relu')
+        self.denseSeq=tf.keras.models.Sequential()
+        if(jump_step>1):
+            for i in range(jump_step-2):
+                self.denseSeq.add(tf.keras.layers.Dense(units=units, activation='relu'))
+        self.a_last = Activation('relu')
+    def call(self,inputs):
+        x0=self.d(inputs)
+        x1=x0
+        if(self.jump_step>1):
+            x1=self.denseSeq(x1)
+        y=x1+x0
+        return self.a_last(y)
+
 class MyModel(Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.split_cnn=My_parse_cnn_layer(1,(3,3),(1,1))
+        self.A=Activation(activation='relu')
+        self.B=BatchNormalization()
+        self.jd1=jumpDenseBlock(units=128,jump_step=2)
+        self.jd2=jumpDenseBlock(units=256,jump_step=3)
+        self.jd3=jumpDenseBlock(units=512,jump_step=4)
+        self.jd3=jumpDenseBlock(units=512,jump_step=4)
+        self.jd3=jumpDenseBlock(units=512,jump_step=4)
         self.Dense=tf.keras.layers.Dense(units=10,activation='softmax')
     def call(self,inputs):
         x=self.split_cnn(inputs)
+        x=self.A(x)
+        x=self.B(x)
+        x=self.jd1(x)
+        x=self.jd2(x)
+        x=self.jd3(x)
         y=self.Dense(x)
         return y
 model = MyModel()
@@ -105,7 +136,7 @@ call_back=tf.keras.callbacks.ModelCheckpoint(
 history=model.fit(
     # image_train.flow(x_train, y_train, batch_size=32), epochs=5,
     # x_train[:300,:,:,:], y_train[:300], batch_size=256, epochs=1, #初步运行，试错
-    x_train, y_train, batch_size=10000, epochs=50,
+    x_train, y_train, batch_size=10000, epochs=30,
     validation_data=(x_test, y_test), validation_steps=1,
     # callbacks=call_back
 )
