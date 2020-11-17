@@ -136,8 +136,8 @@ call_back=tf.keras.callbacks.ModelCheckpoint(
 history=model.fit(
     # image_train.flow(x_train, y_train, batch_size=32), epochs=5,
     # x_train[:300,:,:,:], y_train[:300], batch_size=256, epochs=1, #初步运行，试错
-    x_train, y_train, batch_size=10000, epochs=30,
-    validation_data=(x_test, y_test), validation_steps=1,
+    x_train, y_train, batch_size=100, epochs=300,
+    # validation_data=(x_test, y_test), validation_steps=1,
     # callbacks=call_back
 )
 
@@ -146,19 +146,19 @@ model.summary()
 
 # 画图
 acc=history.history['sparse_categorical_accuracy']
-val_acc=history.history['val_sparse_categorical_accuracy']
+# val_acc=history.history['val_sparse_categorical_accuracy']
 loss=history.history['loss']
-val_loss=history.history['val_loss']
+# val_loss=history.history['val_loss']
 
 plt.subplot(1,2,1)
 plt.plot(acc,label='acc')
-plt.plot(val_acc,label='val acc')
+# plt.plot(val_acc,label='val acc')
 plt.title('acc')
 plt.legend()
 
 plt.subplot(1,2,2)
 plt.plot(loss,label='loss')
-plt.plot(val_loss,label='val_loss')
+# plt.plot(val_loss,label='val_loss')
 plt.title('loss')
 plt.legend()
 plt.show()

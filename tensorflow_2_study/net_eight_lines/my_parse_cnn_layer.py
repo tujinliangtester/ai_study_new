@@ -57,7 +57,7 @@ class My_parse_cnn_layer(tf.keras.layers.Layer):
                 tmp_j += 1
                 if(self.my_juge_out(inputs,tmp_i,tmp_j)):
                     # todo 报错！先写死一个批次的数量
-                    tmp=np.zeros(shape=(10000,1))
+                    tmp=np.zeros(shape=(100,1))
                 else:
                     tmp=inputs[:,tmp_j,tmp_j]
                 if(res is None):
