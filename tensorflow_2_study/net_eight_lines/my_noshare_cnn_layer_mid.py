@@ -2,6 +2,9 @@ import tensorflow as tf
 import  numpy as np
 
 class My_parse_cnn_layer(tf.keras.layers.Layer):
+    '''
+    不共享的卷积，输出结果还是与输入维度一致，以便多层卷积
+    '''
     def __init__(self, filters,
                  kernel_size,
                  strides=(1, 1),
@@ -21,6 +24,8 @@ class My_parse_cnn_layer(tf.keras.layers.Layer):
         # 这里的input只处理单通道，即(N,W,H,C)=(N,W,H,1)
         tmp_w=self.tmp_w = input_shape[1] // self.strides[0]
         tmp_h=self.tmp_h = input_shape[2] // self.strides[1]
+        print('tmp_w:',tmp_w)
+        print('tmp_h:',tmp_h)
         for i in range(tmp_w):
             tmp_weight=[]
             tmp_b=[]
@@ -39,13 +44,18 @@ class My_parse_cnn_layer(tf.keras.layers.Layer):
         split_y=[]
 
         for i in range(self.tmp_w):
+            split_y_i=[]
             for j in range(self.tmp_h):
                 tmp=self.my_draw(inputs,i,j)
                 w=self.w[i][j]
                 w=tf.reshape(w,(-1,1))
                 mysum=tf.reduce_sum(tf.matmul(tmp,w)+self.b[i][j],axis=1)
-                split_y.append( tf.reshape(mysum,(-1,1)))
-        y=tf.concat(split_y,axis=-1)
+                split_y_i.append( tf.reshape(mysum,(-1,1)))
+            split_y.append(split_y_i)
+        # 先按行拼接成矩阵(W,H,N,C)，再变换维度成(N,W,H,C)
+        y=tf.convert_to_tensor(split_y)
+        y=tf.transpose(y,(2,0,1,3))
+        print(y.shape)
         return y
 
     def my_draw(self,inputs,i,j):
