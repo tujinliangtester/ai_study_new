@@ -122,7 +122,8 @@ call_back=tf.keras.callbacks.ModelCheckpoint(
 # 训练网络
 history=model.fit(
     # image_train.flow(x_train, y_train, batch_size=32), epochs=5,
-    x_train, y_train, batch_size=128, epochs=20,
+    # x_train, y_train, batch_size=128, epochs=20,
+    x_train, y_train, batch_size=128, epochs=1,
     validation_data=(x_test, y_test), validation_steps=1,
     callbacks=call_back
 )

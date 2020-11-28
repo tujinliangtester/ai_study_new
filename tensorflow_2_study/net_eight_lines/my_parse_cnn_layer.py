@@ -5,8 +5,8 @@ class My_parse_cnn_layer(tf.keras.layers.Layer):
     def __init__(self, filters,
                  kernel_size,
                  strides=(1, 1),
-                 padding='valid'):
-        super(My_parse_cnn_layer, self).__init__()
+                 padding='valid',**kwargs):
+        super(My_parse_cnn_layer, self).__init__(name='MyParseCnn',**kwargs)
         self.filters = filters
         self.kernel_size = kernel_size
         self.units=kernel_size[0]*kernel_size[1]
