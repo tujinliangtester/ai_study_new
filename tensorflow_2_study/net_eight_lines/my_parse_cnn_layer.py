@@ -19,36 +19,33 @@ class My_parse_cnn_layer(tf.keras.layers.Layer):
         self.w = []
         self.b = []
         # 这里的input只处理单通道，即(N,W,H,C)=(N,W,H,1)
-        tmp_w=self.tmp_w = input_shape[1] // self.strides[0]
-        tmp_h=self.tmp_h = input_shape[2] // self.strides[1]
-        for i in range(tmp_w):
-            tmp_weight=[]
-            tmp_b=[]
-            for j in range(tmp_h):
-                # todo 问题应该就是在这里，将训练变量放到自己的多维数组中，keras无法识别
-                # 两种思路，一种是直接统一赋值给一个w和b，用的时候再去取对应的，
-                # 第二种是有多层的网络，每一层只处理相应局部的cnn
-                self.j_weight=self.add_weight(
-                    shape=(self.units,),
+        self.tmp_w = input_shape[1] // self.strides[0]
+        self.tmp_h = input_shape[2] // self.strides[1]
+        total_num=self.tmp_h*self.tmp_w
+        total_num_units=total_num*self.units
+        self.w=self.add_weight(
+                    shape=(total_num_units,),
                     initializer="random_normal",
                     trainable=True,
                 )
-                tmp_weight.append(self.j_weight)
-                self.j_b=self.add_weight(
-                    shape=(self.units,), initializer="random_normal", trainable=True
-                )
-                tmp_b.append(self.j_b)
-            self.w.append(tmp_weight)
-            self.b.append(tmp_b)
+        self.b= self.add_weight(
+            shape=(total_num_units,),
+            initializer="random_normal",
+            trainable=True,
+        )
+
     def call(self, inputs):
         split_y=[]
-
         for i in range(self.tmp_w):
             for j in range(self.tmp_h):
                 tmp=self.my_draw(inputs,i,j)
-                w=self.w[i][j]
-                w=tf.reshape(w,(-1,1))
-                mysum=tf.reduce_sum(tf.matmul(tmp,w)+self.b[i][j],axis=1)
+                #取w和b
+                start=i*self.tmp_h*self.units+j*self.units
+                end=start+self.units
+                mysum=tf.reduce_sum(
+                    tf.matmul(tmp,tf.reshape(self.w[start:end],(-1,1)))
+                        +self.b[start:end],
+                    axis=1)
                 split_y.append( tf.reshape(mysum,(-1,1)))
         y=tf.concat(split_y,axis=-1)
         return y
