@@ -25,14 +25,19 @@ class My_parse_cnn_layer(tf.keras.layers.Layer):
             tmp_weight=[]
             tmp_b=[]
             for j in range(tmp_h):
-                tmp_weight.append(self.add_weight(
+                # todo 问题应该就是在这里，将训练变量放到自己的多维数组中，keras无法识别
+                # 两种思路，一种是直接统一赋值给一个w和b，用的时候再去取对应的，
+                # 第二种是有多层的网络，每一层只处理相应局部的cnn
+                self.j_weight=self.add_weight(
                     shape=(self.units,),
                     initializer="random_normal",
                     trainable=True,
-                ))
-                tmp_b.append(self.add_weight(
+                )
+                tmp_weight.append(self.j_weight)
+                self.j_b=self.add_weight(
                     shape=(self.units,), initializer="random_normal", trainable=True
-                ))
+                )
+                tmp_b.append(self.j_b)
             self.w.append(tmp_weight)
             self.b.append(tmp_b)
     def call(self, inputs):
@@ -58,6 +63,7 @@ class My_parse_cnn_layer(tf.keras.layers.Layer):
                 tmp_j += 1
                 if(self.my_juge_out(inputs,tmp_i,tmp_j)):
                     # todo 报错！先写死一个批次的数量
+                    # 这里暂时的思路是通过内置函数来增加维度，并且用0填充
                     tmp=np.zeros(shape=(100,1))
                 else:
                     tmp=inputs[:,tmp_j,tmp_j]
