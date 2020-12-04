@@ -16,20 +16,21 @@ class My_parse_cnn_layer(tf.keras.layers.Layer):
 
     def build(self, input_shape):
         self.my_input_shape=input_shape
-        self.w = []
-        self.b = []
         # 这里的input只处理单通道，即(N,W,H,C)=(N,W,H,1)
         self.tmp_w = input_shape[1] // self.strides[0]
         self.tmp_h = input_shape[2] // self.strides[1]
-        total_num=self.tmp_h*self.tmp_w
-        total_num_units=total_num*self.units
+        self.total_num=self.tmp_h*self.tmp_w
+        self.total_num_units=self.total_num*self.units
+        #我在这里加了个名字，居然就可以了？？？！！！
         self.w=self.add_weight(
-                    shape=(total_num_units,),
+                    name='w',
+                    shape=(self.total_num_units,),
                     initializer="random_normal",
                     trainable=True,
                 )
         self.b= self.add_weight(
-            shape=(total_num_units,),
+            name='b',
+            shape=(self.total_num_units,),
             initializer="random_normal",
             trainable=True,
         )

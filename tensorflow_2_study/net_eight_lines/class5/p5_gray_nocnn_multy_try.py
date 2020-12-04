@@ -131,7 +131,6 @@ model = MyModel()
 model.compile(optimizer='adam',
               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
               metrics=['sparse_categorical_accuracy'])
-# tf.keras.optimizers.SGD
 # 断点续训
 check_point_path='./noshare_cnn/multy/mnist.ckpt'
 # check_point_path='./check_point/mnist.ckpt'
