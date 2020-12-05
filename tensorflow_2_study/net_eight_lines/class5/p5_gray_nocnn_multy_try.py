@@ -99,13 +99,13 @@ class jumpDenseBlock(Model):
 class MyModel(Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # self.noshare_cnn1=noshare_cnn(1,(3,3),(1,1))
-        self.noshare_cnn_flatten=My_parse_cnn_layer(1, (3, 3), (1, 1))
-        # self.B=BatchNormalization()
-        # self.A=Activation(activation='relu')
+        self.noshare_cnn1=noshare_cnn(1,(5,5),(1,1))
+        self.noshare_cnn_flatten=My_parse_cnn_layer(1, (5, 5), (1, 1))
+        self.B=BatchNormalization()
+        self.A=Activation(activation='relu')
         self.B2 = BatchNormalization()
         self.A2 = Activation(activation='relu')
-        # self.jd1=jumpDenseBlock(units=128,jump_step=2)
+        self.jd1=jumpDenseBlock(units=128,jump_step=2)
         # self.jd2=jumpDenseBlock(units=256,jump_step=3)
         # self.jd3=jumpDenseBlock(units=512,jump_step=4)
         # self.jd3=jumpDenseBlock(units=512,jump_step=4)
@@ -113,14 +113,14 @@ class MyModel(Model):
         self.Dense=tf.keras.layers.Dense(units=10,activation='softmax')
     def call(self,inputs):
         x=inputs
-        # x=self.noshare_cnn1(x)
-        # x = self.B(x)
-        # x = self.A(x)
+        x=self.noshare_cnn1(x)
+        x = self.B(x)
+        x = self.A(x)
         # 进入dense前，不能少了拉直
         x=self.noshare_cnn_flatten(x)
         x=self.B2(x)
         x=self.A2(x)
-        # x=self.jd1(x)
+        x=self.jd1(x)
         # x=self.jd2(x)
         # x=self.jd3(x)
         y=self.Dense(x)
@@ -132,11 +132,10 @@ model.compile(optimizer='adam',
               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
               metrics=['sparse_categorical_accuracy'])
 # 断点续训
-check_point_path='./noshare_cnn/multy/mnist.ckpt'
-# check_point_path='./check_point/mnist.ckpt'
-# if os.path.exists(check_point_path+'.index'):
-#     print('加载已有模型参数，继续训练')
-#     model.load_weights(check_point_path)
+check_point_path='./p5_gray_nocnn_multy_try/20201205/5x5/mnist.ckpt'
+if os.path.exists(check_point_path+'.index'):
+    print('加载已有模型参数，继续训练')
+    model.load_weights(check_point_path)
 
 call_back=tf.keras.callbacks.ModelCheckpoint(
     filepath=check_point_path,
@@ -148,8 +147,8 @@ call_back=tf.keras.callbacks.ModelCheckpoint(
 history=model.fit(
     # image_train.flow(x_train, y_train, batch_size=32), epochs=5,
     # x_train[:300,:,:,:], y_train[:300], batch_size=100, epochs=1, #初步运行，试错
-    x_train, y_train, batch_size=100, epochs=15,
-    validation_data=(x_test[:100], y_test[:100]), validation_steps=1,
+    x_train, y_train, batch_size=200, epochs=15,
+    validation_data=(x_test, y_test), validation_steps=1,
     callbacks=call_back
 )
 
@@ -159,19 +158,19 @@ model.summary()
 
 # 画图
 acc=history.history['sparse_categorical_accuracy']
-# val_acc=history.history['val_sparse_categorical_accuracy']
+val_acc=history.history['val_sparse_categorical_accuracy']
 loss=history.history['loss']
-# val_loss=history.history['val_loss']
+val_loss=history.history['val_loss']
 
 plt.subplot(1,2,1)
 plt.plot(acc,label='acc')
-# plt.plot(val_acc,label='val acc')
+plt.plot(val_acc,label='val acc')
 plt.title('acc')
 plt.legend()
 
 plt.subplot(1,2,2)
 plt.plot(loss,label='loss')
-# plt.plot(val_loss,label='val_loss')
+plt.plot(val_loss,label='val_loss')
 plt.title('loss')
 plt.legend()
 plt.show()

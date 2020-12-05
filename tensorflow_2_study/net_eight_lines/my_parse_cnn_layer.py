@@ -39,7 +39,7 @@ class My_parse_cnn_layer(tf.keras.layers.Layer):
         split_y=[]
         for i in range(self.tmp_w):
             for j in range(self.tmp_h):
-                tmp=self.my_draw(inputs,i,j)
+                tmp=self.my_draw(inputs,inputs.shape[0],i,j)
                 #取w和b
                 start=i*self.tmp_h*self.units+j*self.units
                 end=start+self.units
@@ -51,7 +51,7 @@ class My_parse_cnn_layer(tf.keras.layers.Layer):
         y=tf.concat(split_y,axis=-1)
         return y
 
-    def my_draw(self,inputs,i,j):
+    def my_draw(self,inputs,batchNum,i,j):
         tmp_i=i-1
         tmp_j=j-1
         res= None
@@ -60,9 +60,8 @@ class My_parse_cnn_layer(tf.keras.layers.Layer):
             for n in range(self.kernel_size[1]):
                 tmp_j += 1
                 if(self.my_juge_out(inputs,tmp_i,tmp_j)):
-                    # todo 报错！先写死一个批次的数量
                     # 这里暂时的思路是通过内置函数来增加维度，并且用0填充
-                    tmp=np.zeros(shape=(100,1))
+                    tmp=np.zeros(shape=(batchNum,1))
                 else:
                     tmp=inputs[:,tmp_j,tmp_j]
                 if(res is None):

@@ -16,65 +16,63 @@ class My_parse_cnn_layer(tf.keras.layers.Layer):
         self.strides = strides
         self.padding = padding
 
-
     def build(self, input_shape):
-        self.my_input_shape=input_shape
-        self.w = []
-        self.b = []
+        self.my_input_shape = input_shape
         # 这里的input只处理单通道，即(N,W,H,C)=(N,W,H,1)
-        tmp_w=self.tmp_w = input_shape[1] // self.strides[0]
-        tmp_h=self.tmp_h = input_shape[2] // self.strides[1]
-        print('tmp_w:',tmp_w)
-        print('tmp_h:',tmp_h)
-        for i in range(tmp_w):
-            tmp_weight=[]
-            tmp_b=[]
-            for j in range(tmp_h):
-                tmp_weight.append(self.add_weight(
-                    shape=(self.units,),
-                    initializer="random_normal",
-                    trainable=True,
-                ))
-                tmp_b.append(self.add_weight(
-                    shape=(self.units,), initializer="random_normal", trainable=True
-                ))
-            self.w.append(tmp_weight)
-            self.b.append(tmp_b)
+        self.tmp_w = input_shape[1] // self.strides[0]
+        self.tmp_h = input_shape[2] // self.strides[1]
+        self.total_num = self.tmp_h * self.tmp_w
+        self.total_num_units = self.total_num * self.units
+        self.w = self.add_weight(
+            name='w',
+            shape=(self.total_num_units,),
+            initializer="random_normal",
+            trainable=True,
+        )
+        self.b = self.add_weight(
+            name='b',
+            shape=(self.total_num_units,),
+            initializer="random_normal",
+            trainable=True,
+        )
     def call(self, inputs):
         split_y=[]
 
         for i in range(self.tmp_w):
             split_y_i=[]
             for j in range(self.tmp_h):
-                tmp=self.my_draw(inputs,i,j)
-                w=self.w[i][j]
+                tmp=self.my_draw(inputs,inputs.shape[0],i,j)
+                # 取w和b
+                start = i * self.tmp_h * self.units + j * self.units
+                end = start + self.units
+                w=self.w[start:end]
+                b=self.b[start:end]
                 w=tf.reshape(w,(-1,1))
-                mysum=tf.reduce_sum(tf.matmul(tmp,w)+self.b[i][j],axis=1)
+                mysum=tf.reduce_sum(tf.matmul(tmp,w)+b,axis=1)
                 split_y_i.append( tf.reshape(mysum,(-1,1)))
             split_y.append(split_y_i)
         # 先按行拼接成矩阵(W,H,N,C)，再变换维度成(N,W,H,C)
         y=tf.convert_to_tensor(split_y)
         y=tf.transpose(y,(2,0,1,3))
-        print(y.shape)
         return y
 
-    def my_draw(self,inputs,i,j):
-        tmp_i=i-1
-        tmp_j=j-1
-        res= None
+    def my_draw(self, inputs, batchNum, i, j):
+        tmp_i = i - 1
+        tmp_j = j - 1
+        res = None
         for m in range(self.kernel_size[0]):
-            tmp_i+=1
+            tmp_i += 1
             for n in range(self.kernel_size[1]):
                 tmp_j += 1
-                if(self.my_juge_out(inputs,tmp_i,tmp_j)):
-                    # todo 报错！先写死一个批次的数量
-                    tmp=np.zeros(shape=(100,1))
+                if (self.my_juge_out(inputs, tmp_i, tmp_j)):
+                    # 这里暂时的思路是通过内置函数来增加维度，并且用0填充
+                    tmp = np.zeros(shape=(batchNum, 1))
                 else:
-                    tmp=inputs[:,tmp_j,tmp_j]
-                if(res is None):
-                    res=tmp
+                    tmp = inputs[:, tmp_j, tmp_j]
+                if (res is None):
+                    res = tmp
                 else:
-                    res=tf.concat([res,tmp],axis=-1)
+                    res = tf.concat([res, tmp], axis=-1)
         return res
     def my_juge_out(self,inputs,i,j):
         if(i<0 or j<0 or i>=inputs.shape[1] or j>=inputs.shape[2]):
