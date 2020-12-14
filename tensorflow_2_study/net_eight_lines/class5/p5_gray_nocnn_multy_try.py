@@ -30,7 +30,7 @@ path='D:\BaiduNetdiskDownload\cifar-10-python\cifar-10-batches-py/data_batch_'
 i=1
 x_train, y_train=[],[]
 while(i<6):
-# while (i < 2):
+# while (i < 5):
     newpath=path+str(i)
     f=unpickle(newpath)
     if(i==1):
@@ -46,10 +46,10 @@ x_train=np.array(x_train).reshape((-1,3,32,32))
 # 转换数据，将channel层放到最后，即NCWH 转成NWHC
 x_train=tf.transpose(x_train,(0,2,3,1))
 y_train=np.array(y_train).reshape(-1)
-# one hot编码
-# y_train=to_categorical(np.array(y_train))
 
 path='D:\BaiduNetdiskDownload\cifar-10-python\cifar-10-batches-py/test_batch'
+# path='D:\BaiduNetdiskDownload\cifar-10-python\cifar-10-batches-py/data_batch_5'
+
 f=unpickle(path)
 x_test, y_test=f[b'data'],f[b'labels']
 
@@ -57,7 +57,7 @@ x_test=tf.cast(x_test,tf.float32)
 x_test=np.array(x_test).reshape((-1,3,32,32))
 # 转换数据，将channel层放到最后，即NCWH 转成NWHC
 x_test=tf.transpose(x_test,(0,2,3,1))
-y_test=np.array(y_test)
+y_test=np.array(y_test).reshape(-1)
 # y_test=to_categorical(np.array(y_test))
 
 # 官方数据集
@@ -136,7 +136,7 @@ model.compile(optimizer='adam',
               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
               metrics=['sparse_categorical_accuracy'])
 # 断点续训
-check_point_path='./p5_gray_nocnn_multy_try/20201209/2/mnist.ckpt'
+check_point_path='./p5_gray_nocnn_multy_try/20201211/mnist.ckpt'
 if os.path.exists(check_point_path+'.index'):
     print('加载已有模型参数，继续训练')
     model.load_weights(check_point_path)
@@ -146,6 +146,13 @@ call_back=tf.keras.callbacks.ModelCheckpoint(
     save_weights_only=True,
     save_best_only=True
 )
+# todo 好像找到问题了！每次续训的时候，都是从0.2左右开始的，
+#  证明，有哪里没有被正确记录！！！
+#  但是，查看源码，发现训练和验证都走的是call方法
+#  但是这两个问题，一是每次训练都是从0.2左右的准确率开始，二是测试集准确率始终都在0.2左右
+#   原因是什么呢？难道是内存不足系统误认为内存之外的出现问题导致的？
+#   又或者是使用了优化器导致的？
+#   这个问题好像没有办法能解决，而且也没有想法能找到原因，目前的猜测，是内存不足引起的
 
 # 训练网络
 history=model.fit(
