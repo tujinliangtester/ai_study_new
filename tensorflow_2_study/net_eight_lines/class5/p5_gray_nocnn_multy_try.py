@@ -29,8 +29,8 @@ def unpickle(file):
 path='D:\BaiduNetdiskDownload\cifar-10-python\cifar-10-batches-py/data_batch_'
 i=1
 x_train, y_train=[],[]
-while(i<6):
-# while (i < 5):
+# while(i<6):
+while (i < 2):
     newpath=path+str(i)
     f=unpickle(newpath)
     if(i==1):
@@ -105,11 +105,11 @@ class MyModel(Model):
         # self.A=Activation(activation='relu')
         self.B2 = BatchNormalization()
         self.A2 = Activation(activation='relu')
-        self.jd1=jumpDenseBlock(units=128,jump_step=2)
+        # self.jd1=jumpDenseBlock(units=128,jump_step=2)
         # self.dr1=tf.keras.layers.Dropout(0.2)
-        self.jd2=jumpDenseBlock(units=256,jump_step=3)
+        # self.jd2=jumpDenseBlock(units=256,jump_step=3)
         # self.dr2=tf.keras.layers.Dropout(0.2)
-        self.jd3=jumpDenseBlock(units=512,jump_step=4)
+        # self.jd3=jumpDenseBlock(units=512,jump_step=4)
         # self.jd3=jumpDenseBlock(units=512,jump_step=4)
         # self.jd3=jumpDenseBlock(units=512,jump_step=4)
         self.Dense=tf.keras.layers.Dense(units=10,activation='softmax')
@@ -122,11 +122,11 @@ class MyModel(Model):
         x=self.noshare_cnn_flatten(x)
         x=self.B2(x)
         x=self.A2(x)
-        x=self.jd1(x)
+        # x=self.jd1(x)
         # x=self.dr1(x)
-        x=self.jd2(x)
+        # x=self.jd2(x)
         # x=self.dr2(x)
-        x=self.jd3(x)
+        # x=self.jd3(x)
         y=self.Dense(x)
         return y
 model = MyModel()
@@ -136,7 +136,7 @@ model.compile(optimizer='adam',
               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
               metrics=['sparse_categorical_accuracy'])
 # 断点续训
-check_point_path='./p5_gray_nocnn_multy_try/20201211/mnist.ckpt'
+check_point_path='./p5_gray_nocnn_multy_try/20201215/2/mnist.ckpt'
 if os.path.exists(check_point_path+'.index'):
     print('加载已有模型参数，继续训练')
     model.load_weights(check_point_path)
@@ -153,12 +153,15 @@ call_back=tf.keras.callbacks.ModelCheckpoint(
 #   原因是什么呢？难道是内存不足系统误认为内存之外的出现问题导致的？
 #   又或者是使用了优化器导致的？
 #   这个问题好像没有办法能解决，而且也没有想法能找到原因，目前的猜测，是内存不足引起的
+#   经过将层数和data减小，试验结果表明，每次续训的时候已经正常了
+#   但是测试集结果还是0.2，观察内存性能表现，感觉还是内存的问题，怎么办呢？
 
 # 训练网络
 history=model.fit(
     # image_train.flow(x_train, y_train, batch_size=32), epochs=5,
     # x_train[:300,:,:,:], y_train[:300], batch_size=100, epochs=1, #初步运行，试错
-    x_train, y_train, batch_size=200, epochs=30,
+    #TODO  将训练的batch_size改为跟测试集一样，看起来好像有点效果？
+    x_train, y_train, batch_size=10000, epochs=120,
     validation_data=(x_test, y_test), validation_steps=1,
     callbacks=call_back
 )
