@@ -118,15 +118,21 @@ class CbaSeq(Model):
 class resNet18(Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.locally_c1=LocallyConnected2D(filters=1,kernel_size=(3,3),strides=1,padding='valid')
+        self.locally_c1=LocallyConnected2D(filters=2,kernel_size=(3,3),strides=1,padding='valid')
         self.l_b1=BatchNormalization()
         self.l_a1=Activation('relu')
-        self.locally_c2 = LocallyConnected2D(filters=1, kernel_size=(3,3), strides=1, padding='valid')
+        self.locally_c2 = LocallyConnected2D(filters=2, kernel_size=(3,3), strides=1, padding='valid')
         self.l_b2 = BatchNormalization()
         self.l_a2 = Activation('relu')
-        self.locally_c3 = LocallyConnected2D(filters=1, kernel_size=(3,3), strides=1, padding='valid')
+        self.locally_c3 = LocallyConnected2D(filters=2, kernel_size=(3,3), strides=1, padding='valid')
         self.l_b3 = BatchNormalization()
         self.l_a3 = Activation('relu')
+        self.locally_c4 = LocallyConnected2D(filters=2, kernel_size=(3, 3), strides=1, padding='valid')
+        self.l_b4 = BatchNormalization()
+        self.l_a4 = Activation('relu')
+        self.locally_c5 = LocallyConnected2D(filters=2, kernel_size=(3, 3), strides=1, padding='valid')
+        self.l_b5 = BatchNormalization()
+        self.l_a5 = Activation('relu')
         # self.c1=Conv2D(filters=64,kernel_size=(3,3),strides=1,padding='same')
         # self.b1=BatchNormalization()
         # self.a1=Activation('relu')
@@ -155,6 +161,12 @@ class resNet18(Model):
         x = self.locally_c3(x)
         x = self.l_b3(x)
         x = self.l_a3(x)
+        x = self.locally_c4(x)
+        x = self.l_b4(x)
+        x = self.l_a4(x)
+        x = self.locally_c5(x)
+        x = self.l_b5(x)
+        x = self.l_a5(x)
         # x=self.c1(x)
         # x=self.b1(x)
         # x=self.a1(x)
@@ -164,15 +176,14 @@ class resNet18(Model):
         return x
 
 model = resNet18()
-# 从训练结果来看，是非常慢的，但是慢不一定不好，可是实际效果看训练集与测试集之间的loss已经分路了
-# 后续需要再训练50次看看效果；然后再模仿人脑结构，层次加大，并结合不同尺寸的局部卷积
+
 # 定义网络
 model.compile(optimizer='adam',
               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
               metrics=['sparse_categorical_accuracy'])
 
 # 断点续训
-check_point_path='./check_point_locally_conv2/1223/mnist.ckpt'
+check_point_path='./check_point_locally_conv2/1224/mnist.ckpt'
 if os.path.exists(check_point_path+'.index'):
     print('加载已有模型参数，继续训练')
     model.load_weights(check_point_path)
