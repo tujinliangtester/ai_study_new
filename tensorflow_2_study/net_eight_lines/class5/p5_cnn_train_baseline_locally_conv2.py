@@ -115,24 +115,26 @@ class CbaSeq(Model):
         x=self.a(x)
         return x
 
+class localCnn(Model):
+    def __init__(self,filters=64,kernel_size=(3,3),strides=1,padding='valid',*args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.lc=LocallyConnected2D(filters=filters,kernel_size=kernel_size,strides=strides,padding=padding)
+        self.b=BatchNormalization()
+        self.a=Activation('relu')
+    def call(self,x):
+        x=self.lc(x)
+        x=self.b(x)
+        x=self.a(x)
+        return x
+
 class resNet18(Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.locally_c1=LocallyConnected2D(filters=2,kernel_size=(3,3),strides=1,padding='valid')
-        self.l_b1=BatchNormalization()
-        self.l_a1=Activation('relu')
-        self.locally_c2 = LocallyConnected2D(filters=2, kernel_size=(3,3), strides=1, padding='valid')
-        self.l_b2 = BatchNormalization()
-        self.l_a2 = Activation('relu')
-        self.locally_c3 = LocallyConnected2D(filters=2, kernel_size=(3,3), strides=1, padding='valid')
-        self.l_b3 = BatchNormalization()
-        self.l_a3 = Activation('relu')
-        self.locally_c4 = LocallyConnected2D(filters=2, kernel_size=(3, 3), strides=1, padding='valid')
-        self.l_b4 = BatchNormalization()
-        self.l_a4 = Activation('relu')
-        self.locally_c5 = LocallyConnected2D(filters=2, kernel_size=(3, 3), strides=1, padding='valid')
-        self.l_b5 = BatchNormalization()
-        self.l_a5 = Activation('relu')
+        self.localCnnBlock = tf.keras.models.Sequential()
+        for i in range(5):
+            tmpLC=localCnn(filters=6,kernel_size=(3,3),strides=1,padding='valid')
+            self.localCnnBlock.add(tmpLC)
+
         # self.c1=Conv2D(filters=64,kernel_size=(3,3),strides=1,padding='same')
         # self.b1=BatchNormalization()
         # self.a1=Activation('relu')
@@ -142,7 +144,7 @@ class resNet18(Model):
         #     self.resNetBlock.add(resB)
         # resB = resBlock(filters=128, kernel_size=(3, 3), strides=2,jump_step=3)
         # self.resNetBlock.add(resB)
-
+        #
         # resB = resBlock(filters=128, kernel_size=(3, 3), strides=1,jump_step=4)
         # self.resNetBlock.add(resB)
         #
@@ -152,21 +154,7 @@ class resNet18(Model):
         self.p=tf.keras.layers.GlobalAveragePooling2D()
         self.dens=Dense(units=10,activation='softmax')
     def call(self,x):
-        x=self.locally_c1(x)
-        x=self.l_b1(x)
-        x=self.l_a1(x)
-        x = self.locally_c2(x)
-        x = self.l_b2(x)
-        x = self.l_a2(x)
-        x = self.locally_c3(x)
-        x = self.l_b3(x)
-        x = self.l_a3(x)
-        x = self.locally_c4(x)
-        x = self.l_b4(x)
-        x = self.l_a4(x)
-        x = self.locally_c5(x)
-        x = self.l_b5(x)
-        x = self.l_a5(x)
+        x=self.localCnnBlock(x)
         # x=self.c1(x)
         # x=self.b1(x)
         # x=self.a1(x)
@@ -183,7 +171,7 @@ model.compile(optimizer='adam',
               metrics=['sparse_categorical_accuracy'])
 
 # 断点续训
-check_point_path='./check_point_locally_conv2/1224/mnist.ckpt'
+check_point_path='./check_point_locally_conv2/1229/mnist.ckpt'
 if os.path.exists(check_point_path+'.index'):
     print('加载已有模型参数，继续训练')
     model.load_weights(check_point_path)
@@ -198,7 +186,7 @@ call_back=tf.keras.callbacks.ModelCheckpoint(
 history=model.fit(
     # image_train.flow(x_train, y_train, batch_size=32), epochs=5,
     # x_train[:300,:,:,:], y_train[:300], batch_size=256, epochs=1, #初步运行，试错
-    x_train, y_train, batch_size=256, epochs=50,
+    x_train, y_train, batch_size=256, epochs=20,
     validation_data=(x_test, y_test), validation_steps=1,
     callbacks=call_back
 )
