@@ -134,31 +134,14 @@ class resNet18(Model):
         for i in range(5):
             tmpLC=localCnn(filters=6,kernel_size=(3,3),strides=1,padding='valid')
             self.localCnnBlock.add(tmpLC)
-
-        # self.c1=Conv2D(filters=64,kernel_size=(3,3),strides=1,padding='same')
-        # self.b1=BatchNormalization()
-        # self.a1=Activation('relu')
-        # self.resNetBlock=tf.keras.models.Sequential()
-        # for i in range(2):
-        #     resB=resBlock(filters=64,kernel_size=(3,3),strides=1,jump_step=2)
-        #     self.resNetBlock.add(resB)
-        # resB = resBlock(filters=128, kernel_size=(3, 3), strides=2,jump_step=3)
-        # self.resNetBlock.add(resB)
-        #
-        # resB = resBlock(filters=128, kernel_size=(3, 3), strides=1,jump_step=4)
-        # self.resNetBlock.add(resB)
-        #
-        # resB = resBlock(filters=256, kernel_size=(3, 3), strides=2,jump_step=5)
-        # self.resNetBlock.add(resB)
-
+        self.d1=Dense(units=256,activation='relu')
+        self.d2=Dense(units=128,activation='relu')
         self.p=tf.keras.layers.GlobalAveragePooling2D()
         self.dens=Dense(units=10,activation='softmax')
     def call(self,x):
         x=self.localCnnBlock(x)
-        # x=self.c1(x)
-        # x=self.b1(x)
-        # x=self.a1(x)
-        # x=self.resNetBlock(x)
+        x=self.d1(x)
+        x=self.d2(x)
         x=self.p(x)
         x=self.dens(x)
         return x
@@ -171,7 +154,7 @@ model.compile(optimizer='adam',
               metrics=['sparse_categorical_accuracy'])
 
 # 断点续训
-check_point_path='./check_point_locally_conv2/1229/mnist.ckpt'
+check_point_path='./check_point_locally_conv2/1231/mnist.ckpt'
 if os.path.exists(check_point_path+'.index'):
     print('加载已有模型参数，继续训练')
     model.load_weights(check_point_path)
